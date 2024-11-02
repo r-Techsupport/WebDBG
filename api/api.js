@@ -56,7 +56,7 @@ app.use(helmet()); // Add security headers to all responses
 // Add CORS middleware to allow all origins
 app.use(cors({
     origin: '*', // Allow all origins
-    methods: ['POST', 'PUT'],
+    methods: ['GET','POST', 'PUT'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
