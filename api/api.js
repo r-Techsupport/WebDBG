@@ -10,6 +10,7 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
 import cors from 'cors';
+import { unquote } from 'querystring';
 
 // Define __filename and __dirname using import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -113,7 +114,8 @@ const handleAnalyzeDmp = async (req, res) => {
         analyzeFile(filePath, res);
     } else if (req.body.url) {
         // If a URL is provided
-        const url = req.body.url;
+        const encodedUrl = req.body.url;
+        const url = unquote(encodedUrl); // Decode the URL
         const fileName = path.basename(url);
         const filePath = path.join(uploadsDir, fileName);
 
