@@ -49,8 +49,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+// Add security headers to all responses
 app.use(helmet()); // Add security headers to all responses
 
 // Add CORS middleware to allow all origins
