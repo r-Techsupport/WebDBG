@@ -138,14 +138,14 @@ app.put('/analyze-dmp', upload.single('dmpFile'), async (req, res) => {
 
 // GET endpoint to render README.md as HTML
 app.get('/', (req, res) => {
-    const readmePath = path.join(__dirname, 'README.md');
+    const readmePath = path.join(__dirname, 'USAGE.md');
     fs.readFile(readmePath, 'utf8', (err, data) => {
         if (err) {
             logger.error(`Error reading README file: ${err.message}`);
             res.status(500).send(`Error reading README file: ${err.message}`);
             return;
         }
-        const htmlContent = marked(data);
+        const htmlContent = marked(data, { mangle: false, headerIds: false });
         res.send(htmlContent);
     });
 });
