@@ -29,5 +29,5 @@ jobs:
 
     - name: Build and push
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE}}:latest /api/Dockerfile
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE}}:latest /api/
         docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE}}:latest
