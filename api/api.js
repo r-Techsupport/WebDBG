@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
+import cors from 'cors';
 
 // Define __filename and __dirname using import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -52,6 +53,17 @@ const upload = multer({ storage });
 app.use(express.json());
 app.use(helmet()); // Add security headers to all responses
 
+// Add CORS middleware to allow all origins
+app.use(cors({
+    origin: '*', // Allow all origins
+    methods: ['POST', 'PUT'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
+
 // Rate limiting middleware to prevent abuse
 const limiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
@@ -93,8 +105,8 @@ const analyzeFile = (filePath, res) => {
     });
 };
 
-// PUT endpoint to receive .dmp file or URL and analyze it
-app.put('/analyze-dmp', upload.single('dmpFile'), async (req, res) => {
+// PUT and POST endpoint to receive .dmp file or URL and analyze it
+const handleAnalyzeDmp = async (req, res) => {
     if (req.file) {
         // If a file is uploaded
         const filePath = path.join(uploadsDir, req.file.originalname);
@@ -134,7 +146,10 @@ app.put('/analyze-dmp', upload.single('dmpFile'), async (req, res) => {
         logger.warn('No file or URL provided');
         res.status(400).send('No file or URL provided');
     }
-});
+};
+
+app.put('/analyze-dmp', upload.single('dmpFile'), handleAnalyzeDmp);
+app.post('/analyze-dmp', upload.single('dmpFile'), handleAnalyzeDmp);
 
 // GET endpoint to render README.md as HTML
 app.get('/', (req, res) => {
