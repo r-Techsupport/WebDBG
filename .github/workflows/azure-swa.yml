@@ -28,7 +28,7 @@ jobs:
           envkey_REACT_APP_SITE_NAME: ${{ secrets.REACT_APP_SITE_NAME }}
           envkey_REACT_APP_REPO_URL: ${{ secrets.REACT_APP_REPO_URL }}
           envkey_REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
-          directory: /swa
+          directory: swa
 
       - name: Build And Deploy
         id: builddeploy
