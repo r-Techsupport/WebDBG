@@ -1,12 +1,25 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {
-        "location": {
-        "value": "EastUS2"
+    "resources": [
+      {
+        "type": "Microsoft.Web/staticSites",
+        "apiVersion": "2022-09-01",
+        "name": "bsod-swa",
+        "location": "East US 2",
+        "properties": {
+          "repositoryUrl": "https://github.com/PipeItToDevNull/bsod-api",
+          "branch": "main",
+          "buildProperties": {
+            "appLocation": "/swa",
+            "outputLocation": "build"
+          }
         },
-        "swaName": {
-        "value": "bsod-swa"
+        "sku": {
+          "name": "Free",
+          "tier": "Free"
         }
-    }
-}
+      }
+    ]
+  }
+  

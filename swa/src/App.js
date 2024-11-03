@@ -4,7 +4,7 @@ import Footer from './footer';
 
 // Retrieve the site name and API URL from environment variables
 const SITE_NAME = process.env.REACT_APP_SITE_NAME;
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = `${process.env.REACT_APP_API_URL}/analyze-dmp`;
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
@@ -41,7 +41,7 @@ const FileUpload = () => {
         throw new Error('Network response was not ok');
       }
 
-      const data = await response.json();
+      const data = await response.text();
       setResponseData(data);
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -67,7 +67,7 @@ const FileUpload = () => {
         throw new Error('Network response was not ok');
       }
 
-      const data = await response.json();
+      const data = await response.text();
       setResponseData(data);
     } catch (error) {
       console.error('Error submitting URL:', error);
@@ -79,34 +79,39 @@ const FileUpload = () => {
 
   return (
     <div>
-      <Helmet>
-        <title>{SITE_NAME}</title>
-      </Helmet>
-      <div id="container">
-        <div id="header">
-          <h1 id="site_name">{SITE_NAME}</h1>
+        <Helmet>
+            <title>{SITE_NAME}</title>
+        </Helmet>
+        <div id="container"> 
+            <div id="header">
+                <h1 id="site_name">{SITE_NAME}</h1>
+            </div>
+            <div class="button-container">
+                <div class="button-div">
+                    <input type="file" onChange={handleFileChange} />
+                    <button onClick={handleFileUpload} disabled={loading}>
+                        {loading ? 'Uploading...' : 'Upload File'}
+                    </button>
+                </div>
+                <div class="button-div">
+                    <input type="text" value={url} onChange={handleUrlChange} placeholder="Enter URL" />
+                    <button onClick={handleUrlSubmit} disabled={loading}>
+                        {loading ? 'Submitting...' : 'Upload URL'}
+                    </button>
+                </div>
+            </div>
+
+            <div id="content">
+                {!error && !responseData && <p>Upload your .dmp file or provide a download link above</p>}
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {responseData && (
+                <div id="content">
+                    <pre>{responseData}</pre> {/* Display the plain text response */}
+                </div>
+                )}
+            </div>
+            <Footer />
         </div>
-        <div>
-          <input type="file" onChange={handleFileChange} />
-          <button onClick={handleFileUpload} disabled={loading}>
-            {loading ? 'Uploading...' : 'Upload File'}
-          </button>
-        </div>
-        <div>
-          <input type="text" value={url} onChange={handleUrlChange} placeholder="Enter URL" />
-          <button onClick={handleUrlSubmit} disabled={loading}>
-            {loading ? 'Submitting...' : 'Submit URL'}
-          </button>
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {responseData && (
-          <div id="content">
-            <h2>Response Data:</h2>
-            <pre>{JSON.stringify(responseData, null, 2)}</pre>
-          </div>
-        )}
-        <Footer />
-      </div>
     </div>
   );
 };

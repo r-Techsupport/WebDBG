@@ -36,9 +36,17 @@ body {
     border-radius: .5em;
     padding: 1em;
 }
+.button-container {
+    padding-bottom: 1em;
+    display: flex;
+}
+.button-div {
+    padding-right: 2em;
+}
 footer {
     text-align: right;
-    padding: 1em;
+    padding-top: 1em;
+    padding-right: 1em;
     font-size: .75em;
 }
 
