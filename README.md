@@ -26,3 +26,6 @@ az group create --name <your-resource-group> --location eastus2
 az deployment group create --resource-group <your-resource-group> --template-file template.json
 ```
 Once deployed, the SWA will now be pointed at your repo and is waiting for a build to be submitted. You must create and configure your own GithubAction for this portion of the deployment.
+
+## Notes
+- The `REACT_APP_API_URL` must not end in a trailing slash
