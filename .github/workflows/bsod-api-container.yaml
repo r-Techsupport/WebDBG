@@ -1,4 +1,4 @@
-name: Build
+name: Build API Container
 
 on:
   push:
@@ -12,7 +12,7 @@ env:
   IMAGE: bsod-api
 
 jobs:
-  build-api:
+  build_and_push:
     runs-on: windows-2022
     permissions:
       packages: write

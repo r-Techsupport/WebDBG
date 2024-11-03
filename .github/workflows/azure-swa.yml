@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+name: Build SWA
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-swa:
+  build_and_deploy_job:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     permissions:
