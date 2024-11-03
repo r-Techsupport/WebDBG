@@ -12,7 +12,7 @@ env:
   IMAGE: bsod-api
 
 jobs:
-  build:
+  build-api:
     runs-on: windows-2022
     permissions:
       packages: write
