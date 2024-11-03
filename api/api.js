@@ -106,17 +106,16 @@ const analyzeFile = (filePath, res) => {
 
 // PUT and POST endpoint to receive .dmp file or URL and analyze it
 const handleAnalyzeDmp = async (req, res) => {
-    if (req.file) {
-        // If a file is uploaded
-        const filePath = path.join(uploadsDir, req.file.originalname);
+    const currentTime = new Date().toISOString().slice(11, 23).replace(/[:.]/g, ''); // Get current time in HHMMSSmmm format
+
+    if (req.file) { // If a file is uploaded
+        const filePath = path.join(uploadsDir, `${currentTime}.dmp`);
         logger.info(`File uploaded: ${filePath}`);
         analyzeFile(filePath, res);
-    } else if (req.query.url) {
-        // If a URL is provided
+    } else if (req.query.url) { // If a URL is provided
         const encodedUrl = req.query.url;
         const url = decodeURIComponent(encodedUrl); // Decode the URL
-        const fileName = path.basename(url);
-        const filePath = path.join(uploadsDir, fileName);
+        const filePath = path.join(uploadsDir, `${currentTime}.dmp`);
 
         try {
             logger.info(`Fetching file from URL: ${url}`);
