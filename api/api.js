@@ -111,9 +111,9 @@ const handleAnalyzeDmp = async (req, res) => {
         const filePath = path.join(uploadsDir, req.file.originalname);
         logger.info(`File uploaded: ${filePath}`);
         analyzeFile(filePath, res);
-    } else if (req.body.url) {
+    } else if (req.query.url) {
         // If a URL is provided
-        const encodedUrl = req.body.url;
+        const encodedUrl = req.query.url;
         const url = decodeURIComponent(encodedUrl); // Decode the URL
         const fileName = path.basename(url);
         const filePath = path.join(uploadsDir, fileName);
