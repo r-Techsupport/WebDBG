@@ -17,6 +17,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 3000;
+app.set('trust proxy', true);
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -77,7 +78,7 @@ app.use(limiter);
 
 // Middleware to log incoming requests
 app.use((req, res, next) => {
-    logger.info(`Incoming request: ${req.method} ${req.url}`, { body: req.body });
+    logger.info(`Incoming request: ${req.ip} ${req.method} ${req.url}`, { body: req.body });
     next();
 });
 
@@ -173,7 +174,7 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke, I lost my 418');
 });
 
-// Start the server
+// Start the Express server
 app.listen(port, () => {
     logger.info(`App listening at http://localhost:${port}`);
 });
