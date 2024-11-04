@@ -37,13 +37,18 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
 
+// Set our filename based on the current time
+const currentTime = new Date().toISOString().slice(11, 23).replace(/[:.]/g, ''); // Get current time in HHMMSSmmm format
+const fileName = `${currentTime}.dmp`;
+const filePath = path.join(uploadsDir, `${fileName}`);
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
-        cb(null, file.originalname);
+        cb(null, fileName);
     }
 });
 
@@ -106,17 +111,14 @@ const analyzeFile = (filePath, res) => {
 
 // PUT and POST endpoint to receive .dmp file or URL and analyze it
 const handleAnalyzeDmp = async (req, res) => {
-    if (req.file) {
-        // If a file is uploaded
-        const filePath = path.join(uploadsDir, req.file.originalname);
+
+    if (req.file) { // If a file is uploaded
         logger.info(`File uploaded: ${filePath}`);
         analyzeFile(filePath, res);
-    } else if (req.query.url) {
-        // If a URL is provided
+
+    } else if (req.query.url) { // If a URL is provided
         const encodedUrl = req.query.url;
         const url = decodeURIComponent(encodedUrl); // Decode the URL
-        const fileName = path.basename(url);
-        const filePath = path.join(uploadsDir, fileName);
 
         try {
             logger.info(`Fetching file from URL: ${url}`);
