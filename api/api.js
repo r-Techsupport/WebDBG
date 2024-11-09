@@ -85,7 +85,7 @@ app.use((req, res, next) => {
 // Function to analyze the file using a command-line debugger
 const analyzeFile = (filePath, res) => {
     logger.info(`Analyzing file: ${filePath}`);
-    exec(`cdb.exe -z ${filePath} -c "k; !analyze -v; q"`, (error, stdout, stderr) => {
+    exec(`pwsh -File C:\\App\\Debug-Dmps\\Debug-Dmps.ps1 -Target  ${filePath}`, (error, stdout, stderr) => {
         // Delete the file after processing
         fs.unlink(filePath, (err) => {
             if (err) {
@@ -105,8 +105,14 @@ const analyzeFile = (filePath, res) => {
             res.status(500).send(`An error occurred while analyzing the file`);
             return;
         }
-        logger.info('Analysis output sent to client');
-        res.send(`Output: ${stdout}`);
+        try {
+            const jsonOutput = JSON.parse(stdout);
+            logger.info('Analysis output sent to client');
+            res.json(jsonOutput);
+        } catch (parseError) {
+            logger.error(`Failed to parse JSON output: ${parseError.message}`);
+            res.status(500).send({ error: 'Failed to parse JSON output' });
+        }
     });
 };
 
