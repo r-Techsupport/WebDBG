@@ -157,10 +157,6 @@ const FileUpload = () => {
         );
     };
 
-    
-    
-    
-    
     return (
         <div>
         <Helmet>
