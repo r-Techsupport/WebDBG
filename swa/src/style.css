@@ -27,15 +27,44 @@ body {
     color: var(--w3);
     font-family: verdana, arial;
 }
+
+/* The main body of the page, used to center text and #content */
 #container {
     margin-left: 10%;
     margin-right: 10%;
 }
+
+/* The central part of the page holding results */
 #content {
     background-color: var(--b3);
     border-radius: .5em;
     padding: 1em;
 }
+
+/* The content for a JSON result */
+.result-content {
+    margin-left: 2em;
+    font-family: monospace;
+    white-space: pre-line;
+}
+
+/* Rename our headers */
+.result-header.analysis::before {
+    content: "Analysis";
+    visibility: visible;
+}
+.result-header.analysis {
+    visibility: hidden;
+}
+.result-header.dmpInfo::before {
+    content: "Dump Info";
+    visibility: visible;
+}
+.result-header.dmpInfo {
+    visibility: hidden;
+}
+
+/* used for upload items */
 .button-container {
     padding-bottom: 1em;
     display: flex;
