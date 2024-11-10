@@ -110,6 +110,7 @@ const FileUpload = () => {
             const order = [
                 "dmpInfo",
                 "analysis",
+                "rawContent",
                 "BUGCHECK_CODE",
                 "BUGCHECK_P1",
                 "BUGCHECK_P2",
@@ -127,18 +128,48 @@ const FileUpload = () => {
                 "BLACKBOXNTFS",
                 "BLACKBOXPNP",
                 "BLACKBOXWINLOGON",
-                "PROCESS_NAME",
-                "rawContent"
+                "PROCESS_NAME"
             ];
+            const specialKeys = ["dmpInfo", "analysis", "rawContent"];
             const sortedData = sortJson(data, order);
+            
             // Convert object to array of key-value pairs
             const keyValueArray = Object.entries(sortedData).map(([key, value]) => ({ key, value }));
-            return keyValueArray.map((item, index) => (
+            
+            // Separate the special items
+            const specialItems = keyValueArray.filter(item => specialKeys.includes(item.key));
+            const regularItems = keyValueArray.filter(item => !specialKeys.includes(item.key));
+            
+            // Render the regular items
+            const regularRender = regularItems.map((item, index) => (
+                <>
+                <dt>{item.key}</dt>
+                <dd>{item.value}</dd>
+                </>
+            ));
+            
+            // Render the special items with their own method
+            const specialRender = specialItems.map((item, index) => (
                 <div key={index} className={item.key}>
-                    <h2>{item.key}</h2>
-                    <p>{item.value}</p>
+                <details>
+                    <summary>{item.key}</summary>
+                    <pre>{item.value}</pre>
+                </details>
                 </div>
             ));
+            
+            // Combine both renders
+            return (
+                <>
+                    <dl>
+                        {regularRender}
+                    </dl>
+                    <div>
+                        {specialRender}
+                    </div>
+                </>
+            );
+            
         }
         return {data};
     };
@@ -151,40 +182,34 @@ const FileUpload = () => {
         <Helmet>
         <title>{SITE_NAME}</title>
         </Helmet>
-        <div id="container"> 
-        <div id="header">
-        <h1 id="site_name">{SITE_NAME}</h1>
-        </div>
-        <div class="button-container">
-        <div class="button-div">
-        <input type="file" onChange={handleFileChange} />
-        <button onClick={handleFileUpload} disabled={loading}>
-        {loading ? 'Uploading...' : 'Upload File'}
-        </button>
-        </div>
-        <div class="button-div">
-        <input type="text" value={url} onChange={handleUrlChange} placeholder="Enter URL" />
-        <button onClick={handleUrlSubmit} disabled={loading}>
-        {loading ? 'Submitting...' : 'Upload URL'}
-        </button>
-        </div>
-        </div>
-        
-        <div id="content">
-        {!error && !responseData && <p>Upload your .dmp file or provide a download link above</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {responseData && (
-            <div id="content">
-            {isValidJson(responseData) ? (
-                <div>{renderJsonToHtml(JSON.parse(responseData))}</div>
-            ) : (
-                <pre>{responseData}</pre>
-            )}
+            <div id="container"> 
+                <div id="header">
+                <h1 id="site_name">{SITE_NAME}</h1>
+                </div>
+                <div class="button-container">
+                    <div class="button-div">
+                    <input type="file" onChange={handleFileChange} />
+                    <button onClick={handleFileUpload} disabled={loading}>
+                    {loading ? 'Uploading...' : 'Upload File'}
+                    </button>
+                    </div>
+                    <div class="button-div">
+                    <input type="text" value={url} onChange={handleUrlChange} placeholder="Enter URL" />
+                    <button onClick={handleUrlSubmit} disabled={loading}>
+                    {loading ? 'Submitting...' : 'Upload URL'}
+                    </button>
+                    </div>
+                </div>
+                
+                <div id="content">
+                {!error && !responseData && <p>Upload your .dmp file or provide a download link above</p>}
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {responseData && (
+                    <>{renderJsonToHtml(JSON.parse(responseData))}</>
+                )}
+                </div>
+            <Footer />
             </div>
-        )}
-        </div>
-        <Footer />
-        </div>
         </div>
     );
 };
