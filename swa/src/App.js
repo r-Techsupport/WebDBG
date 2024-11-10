@@ -180,7 +180,6 @@ const FileUpload = () => {
                         </button>
                     </div>
                 </div>
-                
                 <div id="content">
                 {!error && !responseData && <p>{loading ? 'Processing...' : 'Upload your .dmp file or provide a download link above'}</p>}
                 {error && <p style={{ color: 'red' }}>{error}</p>}
