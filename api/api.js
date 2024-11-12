@@ -53,7 +53,11 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage });
+// Size limit of 10M
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 // Add security headers to all responses
 app.use(helmet()); // Add security headers to all responses
