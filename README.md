@@ -9,7 +9,8 @@ A basic API to injest `.dmp` files and return analyzed text.
     - The base container for the API
     - Windows Core 2022 image containing Windows SDK with only Debugging Tools installed.
 
-## API Usage
+## API
+### Usage
 With a file
 ```bash
 curl.exe -X PUT http://localhost:3000/analyze-dmp -F "dmpFile=@path/to/test.dmp"
@@ -19,8 +20,8 @@ With a URL
 ```bash
 curl -X PUT http://localhost:3000/analyze-dmp -F "url=http://example.com/file.dmp"
 ```
-
-## Azure deployment method
+## SWA
+### Azure deployment method
 ```bash
 az group create --name <your-resource-group> --location eastus2
 az deployment group create --resource-group <your-resource-group> --template-file template.json
