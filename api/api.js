@@ -90,19 +90,19 @@ app.use((req, res, next) => {
 
 // Function to analyze the file using a command-line debugger
 const analyzeFile = (filePath, res) => {
-    logger.info(`Analyzing file: ${filePath}`);
+    logger.info(`Analyzing target: ${filePath}`);
     exec(`pwsh -File C:\\App\\Debug-Dmps\\Debug-Dmps.ps1 -Target  ${filePath}`, (error, stdout, stderr) => {
         // Delete the file after processing
-        fs.unlink(filePath, (err) => {
+        fs.rm(filePath, { recursive: true, force: true }, (err) => {
             if (err) {
-                logger.error(`Failed to delete file: ${err.message}`);
+                logger.error(`Failed to delete target: ${err.message}`);
             } else {
-                logger.info(`Deleted file: ${filePath}`);
+                logger.info(`Deleted target: ${filePath}`);
             }
         });
 
         if (error) {
-            logger.error(`Error analyzing file: ${error.message}`);
+            logger.error(`Error analyzing target: ${error.message}`);
             res.status(500).send(`An error occurred while analyzing the file`);
             return;
         }
@@ -130,11 +130,14 @@ const handleAnalyzeDmp = async (req, res) => {
 
         const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
         const mimeType = fileType(buffer);
-        logger.info(`File type is: ${mimeType}`)
 
         if (mimeType) { // If mimetype returns a valid response
+            logger.info(`File type is: ${mimeType.mime}`)
+
             if (mimeType.mime === 'application/zip') {
                 logger.info(`.zip file uploaded`)
+
+                const filePath = `${uploadPath}_dir`
                 fs.createReadStream(uploadPath)
                 .pipe(unzipper.Extract({ path: filePath }))
                 .on('close', () => {
@@ -145,30 +148,28 @@ const handleAnalyzeDmp = async (req, res) => {
                     logger.error(`Error extracting .zip file: ${err.message}`);
                     res.status(500).send(`Error extracting .zip file: ${err.message}`);
                 });
-
-            } else if (mimeType.mime === 'application/octet-stream') { //dmp files
-                logger.info('.dmp file uploaded')
-                analyzeFile(uploadPath, res);
-            } 
+            }
 
         } else { // If mimetype is undefined check the first 4 bytes of the file
             const fileHeadBuffer = readChunkSync(uploadPath, { length: 4, startPosition: 0 })
             const fileHead = Array.from(fileHeadBuffer).map(byte => String.fromCharCode(byte)).join('');
             logger.info(`First 4 bytes: ${fileHead}`);
             if (fileHead === 'PAGE') {
-                logger.info('File a DMP in PAGE format');
+                logger.info('File is a DMP in PAGE format');
 
                 const filePath = `${uploadPath}.dmp`;
                 fs.rename(uploadPath, filePath, (err) => {
                     if (err) {
-                        console.error('Error renaming file:', err);
+                        logger.error('Error renaming file:', err);
+                        res.status(500).send(`Error renaming file: ${error.message}`);
                     } else {
-                        console.log(`File renamed to: ${filePath}`);
+                        logger.info(`Renamed file: ${filePath}`);
                     }
                 });
 
                 analyzeFile(filePath, res)
             } else {
+                logger.info(`File type was: ${mimeType}`)
                 logger.warn('Unsupported file type');
                 res.status(400).send('Unsupported file type');
             }
