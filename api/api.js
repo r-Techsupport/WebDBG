@@ -10,6 +10,9 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
 import cors from 'cors';
+import unzipper from 'unzipper';
+import fileType from 'file-type';
+import { readChunkSync } from 'read-chunk';
 
 // Define __filename and __dirname using import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -40,8 +43,8 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Set our filename based on the current time
 const currentTime = new Date().toISOString().slice(11, 23).replace(/[:.]/g, ''); // Get current time in HHMMSSmmm format
-const fileName = `${currentTime}.dmp`;
-const filePath = path.join(uploadsDir, `${fileName}`);
+const uploadName = `${currentTime}`;
+const uploadPath = path.join(uploadsDir, `${uploadName}`);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -49,11 +52,15 @@ const storage = multer.diskStorage({
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
-        cb(null, fileName);
+        cb(null, uploadName);
     }
 });
 
-const upload = multer({ storage });
+// Size limit of 10M
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 // Add security headers to all responses
 app.use(helmet()); // Add security headers to all responses
@@ -67,7 +74,6 @@ app.use(cors({
 
 // Handle preflight requests
 app.options('*', cors());
-
 
 // Rate limiting middleware to prevent abuse
 const limiter = rateLimit({
@@ -84,19 +90,19 @@ app.use((req, res, next) => {
 
 // Function to analyze the file using a command-line debugger
 const analyzeFile = (filePath, res) => {
-    logger.info(`Analyzing file: ${filePath}`);
+    logger.info(`Analyzing target: ${filePath}`);
     exec(`pwsh -File C:\\App\\Debug-Dmps\\Debug-Dmps.ps1 -Target  ${filePath}`, (error, stdout, stderr) => {
         // Delete the file after processing
-        fs.unlink(filePath, (err) => {
+        fs.rm(filePath, { recursive: true, force: true }, (err) => {
             if (err) {
-                logger.error(`Failed to delete file: ${err.message}`);
+                logger.error(`Failed to delete target: ${err.message}`);
             } else {
-                logger.info(`Deleted file: ${filePath}`);
+                logger.info(`Deleted target: ${filePath}`);
             }
         });
 
         if (error) {
-            logger.error(`Error analyzing file: ${error.message}`);
+            logger.error(`Error analyzing target: ${error.message}`);
             res.status(500).send(`An error occurred while analyzing the file`);
             return;
         }
@@ -120,8 +126,7 @@ const analyzeFile = (filePath, res) => {
 const handleAnalyzeDmp = async (req, res) => {
 
     if (req.file) { // If a file is uploaded
-        logger.info(`File uploaded: ${filePath}`);
-        analyzeFile(filePath, res);
+        logger.info(`File uploaded: ${uploadPath}`);
 
     } else if (req.query.url) { // If a URL is provided
         const encodedUrl = req.query.url;
@@ -135,18 +140,22 @@ const handleAnalyzeDmp = async (req, res) => {
                 responseType: 'stream'
             });
 
-            const writer = fs.createWriteStream(filePath);
+            logger.info(`Writing file to: ${uploadPath}`)
+            const writer = fs.createWriteStream(uploadPath);
             response.data.pipe(writer);
 
-            writer.on('finish', () => {
-                logger.info(`File downloaded: ${filePath}`);
-                analyzeFile(filePath, res);
+            await new Promise((resolve, reject) => {
+                writer.on('finish', () => {
+                    logger.info(`File downloaded: ${uploadPath}`);
+                    resolve();
+                });
+                writer.on('error', (err) => {
+                    logger.error(`Error downloading file: ${err.message}`);
+                    res.status(500).send(`Error downloading file: ${err.message}`);
+                    reject(err);
+                });
             });
 
-            writer.on('error', (err) => {
-                logger.error(`Error downloading file: ${err.message}`);
-                res.status(500).send(`Error downloading file: ${err.message}`);
-            });
         } catch (error) {
             logger.error(`Error fetching URL: ${error.message}`);
             res.status(500).send(`Error fetching URL: ${error.message}`);
@@ -154,6 +163,57 @@ const handleAnalyzeDmp = async (req, res) => {
     } else {
         logger.warn('No file or URL provided');
         res.status(400).send('No file or URL provided');
+    }
+
+    // Process the files
+    const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
+    const mimeType = fileType(buffer);
+
+    if (mimeType) { // If mimetype returns a valid response
+        logger.info(`File type is: ${mimeType.mime}`)
+
+        if (mimeType.mime === 'application/zip') {
+            logger.info(`.zip file uploaded`)
+
+            const filePath = `${uploadPath}_dir`
+            fs.createReadStream(uploadPath)
+            .pipe(unzipper.Extract({ path: filePath }))
+            .on('close', () => {
+                logger.info(`.zip file extracted: ${filePath}`);
+                analyzeFile(filePath, res); // Analyze the extracted directory
+            })
+            .on('error', (err) => {
+                logger.error(`Error extracting .zip file: ${err.message}`);
+                res.status(500).send(`Error extracting .zip file: ${err.message}`);
+            });
+        } else {
+            logger.warn('Unsupported file type');
+            res.status(400).send('Unsupported file type');
+        }
+
+    } else { // If mimetype is undefined check the first 4 bytes of the file
+        const fileHeadBuffer = readChunkSync(uploadPath, { length: 4, startPosition: 0 })
+        const fileHead = Array.from(fileHeadBuffer).map(byte => String.fromCharCode(byte)).join('');
+        logger.info(`First 4 bytes: ${fileHead}`);
+        if (fileHead === 'PAGE') {
+            logger.info('File is a DMP in PAGE format');
+
+            const filePath = `${uploadPath}.dmp`;
+            fs.rename(uploadPath, filePath, (err) => {
+                if (err) {
+                    logger.error('Error renaming file:', err);
+                    res.status(500).send(`Error renaming file: ${error.message}`);
+                } else {
+                    logger.info(`Renamed file: ${filePath}`);
+                }
+            });
+
+            analyzeFile(filePath, res)
+        } else {
+            logger.info(`File type was: ${mimeType}`)
+            logger.warn('Unsupported file type');
+            res.status(400).send('Unsupported file type');
+        }
     }
 };
 
