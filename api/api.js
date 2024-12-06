@@ -128,53 +128,6 @@ const handleAnalyzeDmp = async (req, res) => {
     if (req.file) { // If a file is uploaded
         logger.info(`File uploaded: ${uploadPath}`);
 
-        const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
-        const mimeType = fileType(buffer);
-
-        if (mimeType) { // If mimetype returns a valid response
-            logger.info(`File type is: ${mimeType.mime}`)
-
-            if (mimeType.mime === 'application/zip') {
-                logger.info(`.zip file uploaded`)
-
-                const filePath = `${uploadPath}_dir`
-                fs.createReadStream(uploadPath)
-                .pipe(unzipper.Extract({ path: filePath }))
-                .on('close', () => {
-                    logger.info(`.zip file extracted: ${filePath}`);
-                    analyzeFile(filePath, res); // Analyze the extracted directory
-                })
-                .on('error', (err) => {
-                    logger.error(`Error extracting .zip file: ${err.message}`);
-                    res.status(500).send(`Error extracting .zip file: ${err.message}`);
-                });
-            }
-
-        } else { // If mimetype is undefined check the first 4 bytes of the file
-            const fileHeadBuffer = readChunkSync(uploadPath, { length: 4, startPosition: 0 })
-            const fileHead = Array.from(fileHeadBuffer).map(byte => String.fromCharCode(byte)).join('');
-            logger.info(`First 4 bytes: ${fileHead}`);
-            if (fileHead === 'PAGE') {
-                logger.info('File is a DMP in PAGE format');
-
-                const filePath = `${uploadPath}.dmp`;
-                fs.rename(uploadPath, filePath, (err) => {
-                    if (err) {
-                        logger.error('Error renaming file:', err);
-                        res.status(500).send(`Error renaming file: ${error.message}`);
-                    } else {
-                        logger.info(`Renamed file: ${filePath}`);
-                    }
-                });
-
-                analyzeFile(filePath, res)
-            } else {
-                logger.info(`File type was: ${mimeType}`)
-                logger.warn('Unsupported file type');
-                res.status(400).send('Unsupported file type');
-            }
-        }
-
     } else if (req.query.url) { // If a URL is provided
         const encodedUrl = req.query.url;
         const url = decodeURIComponent(encodedUrl); // Decode the URL
@@ -187,18 +140,22 @@ const handleAnalyzeDmp = async (req, res) => {
                 responseType: 'stream'
             });
 
-            const writer = fs.createWriteStream(filePath);
+            logger.info(`Writing file to: ${uploadPath}`)
+            const writer = fs.createWriteStream(uploadPath);
             response.data.pipe(writer);
 
-            writer.on('finish', () => {
-                logger.info(`File downloaded: ${filePath}`);
-                analyzeFile(filePath, res);
+            await new Promise((resolve, reject) => {
+                writer.on('finish', () => {
+                    logger.info(`File downloaded: ${uploadPath}`);
+                    resolve();
+                });
+                writer.on('error', (err) => {
+                    logger.error(`Error downloading file: ${err.message}`);
+                    res.status(500).send(`Error downloading file: ${err.message}`);
+                    reject(err);
+                });
             });
 
-            writer.on('error', (err) => {
-                logger.error(`Error downloading file: ${err.message}`);
-                res.status(500).send(`Error downloading file: ${err.message}`);
-            });
         } catch (error) {
             logger.error(`Error fetching URL: ${error.message}`);
             res.status(500).send(`Error fetching URL: ${error.message}`);
@@ -206,6 +163,54 @@ const handleAnalyzeDmp = async (req, res) => {
     } else {
         logger.warn('No file or URL provided');
         res.status(400).send('No file or URL provided');
+    }
+
+    // Process the files
+    const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
+    const mimeType = fileType(buffer);
+
+    if (mimeType) { // If mimetype returns a valid response
+        logger.info(`File type is: ${mimeType.mime}`)
+
+        if (mimeType.mime === 'application/zip') {
+            logger.info(`.zip file uploaded`)
+
+            const filePath = `${uploadPath}_dir`
+            fs.createReadStream(uploadPath)
+            .pipe(unzipper.Extract({ path: filePath }))
+            .on('close', () => {
+                logger.info(`.zip file extracted: ${filePath}`);
+                analyzeFile(filePath, res); // Analyze the extracted directory
+            })
+            .on('error', (err) => {
+                logger.error(`Error extracting .zip file: ${err.message}`);
+                res.status(500).send(`Error extracting .zip file: ${err.message}`);
+            });
+        }
+
+    } else { // If mimetype is undefined check the first 4 bytes of the file
+        const fileHeadBuffer = readChunkSync(uploadPath, { length: 4, startPosition: 0 })
+        const fileHead = Array.from(fileHeadBuffer).map(byte => String.fromCharCode(byte)).join('');
+        logger.info(`First 4 bytes: ${fileHead}`);
+        if (fileHead === 'PAGE') {
+            logger.info('File is a DMP in PAGE format');
+
+            const filePath = `${uploadPath}.dmp`;
+            fs.rename(uploadPath, filePath, (err) => {
+                if (err) {
+                    logger.error('Error renaming file:', err);
+                    res.status(500).send(`Error renaming file: ${error.message}`);
+                } else {
+                    logger.info(`Renamed file: ${filePath}`);
+                }
+            });
+
+            analyzeFile(filePath, res)
+        } else {
+            logger.info(`File type was: ${mimeType}`)
+            logger.warn('Unsupported file type');
+            res.status(400).send('Unsupported file type');
+        }
     }
 };
 
