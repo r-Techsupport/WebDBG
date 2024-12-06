@@ -10,6 +10,9 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
 import cors from 'cors';
+import unzipper from 'unzipper';
+import fileType from 'file-type';
+import { readChunkSync } from 'read-chunk';
 
 // Define __filename and __dirname using import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -40,8 +43,8 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Set our filename based on the current time
 const currentTime = new Date().toISOString().slice(11, 23).replace(/[:.]/g, ''); // Get current time in HHMMSSmmm format
-const fileName = `${currentTime}.dmp`;
-const filePath = path.join(uploadsDir, `${fileName}`);
+const uploadName = `${currentTime}`;
+const uploadPath = path.join(uploadsDir, `${uploadName}`);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -49,7 +52,7 @@ const storage = multer.diskStorage({
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
-        cb(null, fileName);
+        cb(null, uploadName);
     }
 });
 
@@ -71,7 +74,6 @@ app.use(cors({
 
 // Handle preflight requests
 app.options('*', cors());
-
 
 // Rate limiting middleware to prevent abuse
 const limiter = rateLimit({
@@ -124,8 +126,53 @@ const analyzeFile = (filePath, res) => {
 const handleAnalyzeDmp = async (req, res) => {
 
     if (req.file) { // If a file is uploaded
-        logger.info(`File uploaded: ${filePath}`);
-        analyzeFile(filePath, res);
+        logger.info(`File uploaded: ${uploadPath}`);
+
+        const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
+        const mimeType = fileType(buffer);
+        logger.info(`File type is: ${mimeType}`)
+
+        if (mimeType) { // If mimetype returns a valid response
+            if (mimeType.mime === 'application/zip') {
+                logger.info(`.zip file uploaded`)
+                fs.createReadStream(uploadPath)
+                .pipe(unzipper.Extract({ path: filePath }))
+                .on('close', () => {
+                    logger.info(`.zip file extracted: ${filePath}`);
+                    analyzeFile(filePath, res); // Analyze the extracted directory
+                })
+                .on('error', (err) => {
+                    logger.error(`Error extracting .zip file: ${err.message}`);
+                    res.status(500).send(`Error extracting .zip file: ${err.message}`);
+                });
+
+            } else if (mimeType.mime === 'application/octet-stream') { //dmp files
+                logger.info('.dmp file uploaded')
+                analyzeFile(uploadPath, res);
+            } 
+
+        } else { // If mimetype is undefined check the first 4 bytes of the file
+            const fileHeadBuffer = readChunkSync(uploadPath, { length: 4, startPosition: 0 })
+            const fileHead = Array.from(fileHeadBuffer).map(byte => String.fromCharCode(byte)).join('');
+            logger.info(`First 4 bytes: ${fileHead}`);
+            if (fileHead === 'PAGE') {
+                logger.info('File a DMP in PAGE format');
+
+                const filePath = `${uploadPath}.dmp`;
+                fs.rename(uploadPath, filePath, (err) => {
+                    if (err) {
+                        console.error('Error renaming file:', err);
+                    } else {
+                        console.log(`File renamed to: ${filePath}`);
+                    }
+                });
+
+                analyzeFile(filePath, res)
+            } else {
+                logger.warn('Unsupported file type');
+                res.status(400).send('Unsupported file type');
+            }
+        }
 
     } else if (req.query.url) { // If a URL is provided
         const encodedUrl = req.query.url;
