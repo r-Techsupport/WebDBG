@@ -186,6 +186,9 @@ const handleAnalyzeDmp = async (req, res) => {
                 logger.error(`Error extracting .zip file: ${err.message}`);
                 res.status(500).send(`Error extracting .zip file: ${err.message}`);
             });
+        } else {
+            logger.warn('Unsupported file type');
+            res.status(400).send('Unsupported file type');
         }
 
     } else { // If mimetype is undefined check the first 4 bytes of the file
