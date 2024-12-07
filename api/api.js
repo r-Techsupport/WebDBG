@@ -13,6 +13,7 @@ import cors from 'cors';
 import unzipper from 'unzipper';
 import fileType from 'file-type';
 import { readChunkSync } from 'read-chunk';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define __filename and __dirname using import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -41,9 +42,9 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
 
-// Set our filename based on the current time
-const currentTime = new Date().toISOString().slice(11, 23).replace(/[:.]/g, ''); // Get current time in HHMMSSmmm format
-const uploadName = `${currentTime}`;
+// Set our filename based on the first octet of a UUID
+const shortUUID = uuidv4().split('-')[0]; // Get the first part of the UUID
+const uploadName = `${shortUUID}`;
 const uploadPath = path.join(uploadsDir, `${uploadName}`);
 
 // Configure multer for file uploads
