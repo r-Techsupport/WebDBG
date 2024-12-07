@@ -103,7 +103,7 @@ const analyzeFile = (filePath, res) => {
         });
 
         if (error) {
-            logger.error(`Error analyzing target: ${error.message}`);
+            logger.error(`Failed to analyze target: ${error.message}`);
             res.status(500).send(`An error occurred while analyzing the file`);
             return;
         }
@@ -118,7 +118,7 @@ const analyzeFile = (filePath, res) => {
             res.json(jsonOutput);
         } catch (parseError) {
             logger.error(`Failed to parse JSON output: ${parseError.message}`);
-            res.status(500).send({ error: 'Failed to parse JSON output' });
+            res.status(500).send('An error occured while parsing JSON output');
         }
     });
 };
@@ -151,15 +151,15 @@ const handleAnalyzeDmp = async (req, res) => {
                     resolve();
                 });
                 writer.on('error', (err) => {
-                    logger.error(`Error downloading file: ${err.message}`);
-                    res.status(500).send(`Error downloading file: ${err.message}`);
+                    logger.error(`Failed to download file: ${err.message}`);
+                    res.status(500).send(`An error occured while downloading file: ${err.message}`);
                     reject(err);
                 });
             });
 
         } catch (error) {
-            logger.error(`Error fetching URL: ${error.message}`);
-            res.status(500).send(`Error fetching URL: ${error.message}`);
+            logger.error(`Failed to fetch URL: ${error.message}`);
+            res.status(500).send(`An error occured while fetching URL: ${error.message}`);
             return; // Terminate on invalid URL
         }
     } else {
@@ -185,8 +185,8 @@ const handleAnalyzeDmp = async (req, res) => {
                 analyzeFile(filePath, res); // Analyze the extracted directory
             })
             .on('error', (err) => {
-                logger.error(`Error extracting .zip file: ${err.message}`);
-                res.status(500).send(`Error extracting .zip file: ${err.message}`);
+                logger.error(`Failed to extract .zip file: ${err.message}`);
+                res.status(500).send(`An error occured while extracting .zip file: ${err.message}`);
             });
         } else {
             logger.warn('Unsupported file type');
@@ -203,8 +203,8 @@ const handleAnalyzeDmp = async (req, res) => {
             const filePath = `${uploadPath}.dmp`;
             fs.rename(uploadPath, filePath, (err) => {
                 if (err) {
-                    logger.error('Error renaming file:', err);
-                    res.status(500).send(`Error renaming file: ${error.message}`);
+                    logger.error('Failed to rename file:', err);
+                    res.status(500).send(`An error occured while renaming file: ${error.message}`);
                 } else {
                     logger.info(`Renamed file: ${filePath}`);
                 }
@@ -227,8 +227,8 @@ app.get('/', (req, res) => {
     const readmePath = path.join(__dirname, 'USAGE.md');
     fs.readFile(readmePath, 'utf8', (err, data) => {
         if (err) {
-            logger.error(`Error reading README file: ${err.message}`);
-            res.status(500).send(`Error reading README file: ${err.message}`);
+            logger.error(`Failed to read README file: ${err.message}`);
+            res.status(500).send(`An error occured while reading README file: ${err.message}`);
             return;
         }
         const htmlContent = marked(data, { mangle: false, headerIds: false });
@@ -238,7 +238,7 @@ app.get('/', (req, res) => {
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
-    logger.error(`Unhandled error: ${err.stack}`);
+    logger.error(`Unhandled failure: ${err.stack}`);
     res.status(500).send('Something broke, I lost my 418');
 });
 
