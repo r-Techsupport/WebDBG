@@ -159,6 +159,7 @@ const handleAnalyzeDmp = async (req, res) => {
         } catch (error) {
             logger.error(`Error fetching URL: ${error.message}`);
             res.status(500).send(`Error fetching URL: ${error.message}`);
+            return; // Terminate on invalid URL
         }
     } else {
         logger.warn('No file or URL provided');
