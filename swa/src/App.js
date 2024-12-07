@@ -37,15 +37,16 @@ const FileUpload = () => {
                 body: formData,
             });
             
+            const responseText = await response.text();
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`${responseText}`);
             }
             
-            const data = await response.text();
-            setResponseData(data);
+            setResponseData(responseText);
         } catch (error) {
-            console.error('Error uploading file:', error);
-            setError('Error uploading file');
+            console.error(error);
+            setError(`Error: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -63,15 +64,16 @@ const FileUpload = () => {
                 method: 'PUT',
             });
             
+            const responseText = await response.text();
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`${responseText}`);
             }
             
-            const data = await response.text();
-            setResponseData(data);
+            setResponseData(responseText);
         } catch (error) {
-            console.error('Error submitting URL:', error);
-            setError('Error submitting URL');
+            console.error(error);
+            setError(`Error: ${error.message}`);
         } finally {
             setLoading(false);
         }
