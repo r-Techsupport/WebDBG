@@ -4,12 +4,15 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  REPO: pipeittodevnull
-  IMAGE: bsod-api
+  REPO: r-techsupport
+  IMAGE: webdbg-api
 
 jobs:
   build_and_push:
@@ -18,7 +21,7 @@ jobs:
       packages: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: true
 
@@ -31,5 +34,10 @@ jobs:
 
     - name: Build and push
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE}}:latest api/
-        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE}}:latest
+        TAG=$([[ ${{ github.ref }} == refs/heads/main ]] && echo "latest" || echo "devel")
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha.slice(0, 7) }} api/
+        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG
+        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha.slice(0, 7) }} 
+
+    - name: Log out from the Container registry
+      run: docker logout ${{ env.REGISTRY }}
