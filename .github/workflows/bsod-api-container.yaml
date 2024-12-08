@@ -25,6 +25,9 @@ jobs:
       with:
         submodules: true
 
+    - name: Set short SHA
+      run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
     - name: Log in to the Container registry
       uses: docker/login-action@v3
       with:
@@ -35,9 +38,23 @@ jobs:
     - name: Build and push
       run: |
         TAG=$([[ ${{ github.ref }} == refs/heads/main ]] && echo "latest" || echo "devel")
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha.slice(0, 7) }} api/
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$SHORT_SHA api/
         docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG
-        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha.slice(0, 7) }} 
+        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$SHORT_SHA
 
     - name: Log out from the Container registry
       run: docker logout ${{ env.REGISTRY }}
+
+    - name: Comment on the PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const tag = '${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.TAG }}';
+          const shortSha = '${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.SHORT_SHA }}';
+          github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: `Docker images have been built and pushed:\n- \`${tag}\`\n- \`${shortSha}\``
+          });
