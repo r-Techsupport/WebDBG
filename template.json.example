@@ -5,10 +5,10 @@
       {
         "type": "Microsoft.Web/staticSites",
         "apiVersion": "2022-09-01",
-        "name": "WebDBG",
+        "name": "SWA NAME",
         "location": "East US 2",
         "properties": {
-          "repositoryUrl": "https://github.com/r-Techsupport/WebDBG",
+          "repositoryUrl": "REPO URL",
           "branch": "main",
           "buildProperties": {
             "appLocation": "/swa",
@@ -21,4 +21,5 @@
         }
       }
     ]
-}
+  }
+  
