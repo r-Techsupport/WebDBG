@@ -27,9 +27,6 @@ jobs:
       with:
         submodules: true
 
-    - name: Set short SHA
-      run: echo "SHORT_SHA=${{ GITHUB_SHA::7 }}" >> $GITHUB_ENV
-
     - name: Log in to the Container registry
       uses: docker/login-action@v3
       with:
@@ -39,11 +36,14 @@ jobs:
 
     - name: Build and push
       run: |
+        $SHORT_SHA = "${{ github.sha }}"[0..6] -join ''
+
         if ("${{ github.ref }}" -eq 'refs/heads/main') {
           $TAG = 'latest'
         } else {
           $TAG = 'devel'
         }
+
         Write-Host "Using tag: $TAG"
         docker build -t `
           ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG `
