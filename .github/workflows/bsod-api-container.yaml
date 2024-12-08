@@ -36,7 +36,7 @@ jobs:
 
     - name: Build and push
       run: |
-        $SHORT_SHA = "${{ github.sha }}"[0..6] -join ''
+        $SHA = "${{ github.sha }}"[0..6] -join ''
 
         if ("${{ github.ref }}" -eq 'refs/heads/main') {
           $TAG = 'latest'
@@ -45,12 +45,14 @@ jobs:
         }
 
         Write-Host "Using tag: $TAG"
+        Write-Host "Using SHA: $SHA"
+
         docker build -t `
           ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG `
-          -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.SHORT_SHA }} `
+          -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$SHA `
           api/
         docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG
-        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.SHORT_SHA }}
+        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$SHA
 
     - name: Log out from the Container registry
       run: docker logout ${{ env.REGISTRY }}
