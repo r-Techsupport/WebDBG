@@ -44,10 +44,7 @@ jobs:
         } else {
           $TAG = 'devel'
         }
-        docker build `
-          -t ${{ env.REGISTRY }}/${{ env:REPO }}/${{ env:IMAGE }}:$TAG `
-          -t ${{ env:REGISTRY }}/${{ env:REPO }}/${{ env:IMAGE }}:${{ env:SHORT_SHA }} `
-          api/
+        docker build -t ${{ env.REGISTRY }}/${{ env:REPO }}/${{ env:IMAGE }}:$TAG -t ${{ env:REGISTRY }}/${{ env:REPO }}/${{ env:IMAGE }}:${{ env:SHORT_SHA }} api/
         docker push ${{ env:REGISTRY }}/${{ env:REPO }}/${{ env:IMAGE }}:$TAG
         docker push ${{ env:REGISTRY }}/${{ env:REPO }}/${{ env:IMAGE }}:${{ env:SHORT_SHA }}
 
