@@ -37,13 +37,15 @@ jobs:
     - name: Build and push
       run: |
         $SHA = "${{ github.sha }}"[0..6] -join ''
-        echo "SHA=$SHA" >> $env:GITHUB_ENV
 
         if ("${{ github.ref }}" -eq 'refs/heads/main') {
           $TAG = 'latest'
         } else {
           $TAG = 'devel'
         }
+
+        echo "SHA=$SHA" >> $env:GITHUB_ENV
+        echo "TAG=$TAG" >> $env:GITHUB_ENV
 
         Write-Host "Using tag: $TAG"
         Write-Host "Using SHA: $SHA"
