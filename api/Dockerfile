@@ -22,5 +22,5 @@ EXPOSE 3000
 # Start the application
 CMD ["node", "api.js"]
 
-LABEL org.opencontainers.image.source https://github.com/PipeItToDevNull/bsod-api
+LABEL org.opencontainers.image.source https://github.com/r-Techsupport/WebDBG
 LABEL org.opencontainers.image.description A BSOD debug API using WinDebug-Container 

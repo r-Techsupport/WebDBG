@@ -37,6 +37,7 @@ jobs:
     - name: Build and push
       run: |
         $SHA = "${{ github.sha }}"[0..6] -join ''
+        echo "SHA=$SHA" >> $env:GITHUB_ENV
 
         if ("${{ github.ref }}" -eq 'refs/heads/main') {
           $TAG = 'latest'
@@ -62,11 +63,11 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const tag = '${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.TAG }}';
-          const shortSha = '${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.SHORT_SHA }}';
+          const tagImage = '${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.TAG }}';
+          const shaImage = '${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ env.SHA }}';
           github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: context.issue.number,
-            body: `Docker images have been built and pushed:\n- \`${tag}\`\n- \`${shortSha}\``
+            body: `Docker images have been built and pushed:\n- \`${tagImage}\`\n- \`${shaImage}\``
           });
