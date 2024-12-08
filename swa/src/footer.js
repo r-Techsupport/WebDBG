@@ -9,6 +9,7 @@ const Footer = () => {
   return (
     <footer>
       <p>Find the source for this project <a id="repo_url" href="#">on GitHub</a></p>
+      <p style={{fontSize: `.75em`}}><a href="https://www.flaticon.com/free-icons/dmp" title="dmp icons">Dmp icons created by PixelX - Flaticon</a></p>
     </footer>
   );
 };
