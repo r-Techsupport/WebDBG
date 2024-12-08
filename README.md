@@ -57,3 +57,14 @@ With a URL
 ```bash
 curl -X PUT http://localhost:3000/analyze-dmp -F "url=http://example.com/file.dmp"
 ```
+
+## Credits
+Testing
+- @TheKrol
+
+Naming
+- @Daspletosaurid
+
+Development advisories
+- @zleyyij
+- @sealsrock12
