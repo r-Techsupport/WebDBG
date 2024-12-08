@@ -18,6 +18,8 @@ jobs:
   build_and_push:
     runs-on: windows-2022
     permissions:
+      contents: write
+      pull-requests: write
       packages: write
     steps:
     - name: Checkout code
@@ -37,10 +39,14 @@ jobs:
 
     - name: Build and push
       run: |
-        TAG=$([[ ${{ github.ref }} == refs/heads/main ]] && echo "latest" || echo "devel")
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG -t ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$SHORT_SHA api/
-        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$TAG
-        docker push ${{ env.REGISTRY }}/${{ env.REPO }}/${{ env.IMAGE }}:$SHORT_SHA
+        if ($env:GITHUB_REF -eq 'refs/heads/main') {
+          $TAG = 'latest'
+        } else {
+          $TAG = 'devel'
+        }
+        docker build -t $env:REGISTRY/$env:REPO/$env:IMAGE:$TAG -t $env:REGISTRY/$env:REPO/$env:IMAGE:$env:SHORT_SHA api/
+        docker push $env:REGISTRY/$env:REPO/$env:IMAGE:$TAG
+        docker push $env:REGISTRY/$env:REPO/$env:IMAGE:$env:SHORT_SHA
 
     - name: Log out from the Container registry
       run: docker logout ${{ env.REGISTRY }}
