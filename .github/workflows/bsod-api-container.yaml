@@ -39,7 +39,7 @@ jobs:
 
     - name: Build and push
       run: |
-        if ($env:GITHUB_REF -eq 'refs/heads/main') {
+        if (${{ env.GITHUB_REF }} -eq 'refs/heads/main') {
           $TAG = 'latest'
         } else {
           $TAG = 'devel'
