@@ -1,7 +1,6 @@
 import express from 'express';
 import multer from 'multer';
 import axios from 'axios';
-import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { marked } from 'marked';
@@ -13,7 +12,8 @@ import cors from 'cors';
 import unzipper from 'unzipper';
 import fileType from 'file-type';
 import { readChunkSync } from 'read-chunk';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
+import Analyze from './analyze.js';
 
 // Define __filename and __dirname using import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -89,10 +89,18 @@ app.use((req, res, next) => {
     next();
 });
 
-// Function to analyze the file using a command-line debugger
-const analyzeFile = (filePath, res) => {
+// Function to execute analysis commands on local files
+const analyzeFile = async (filePath, res) => {
     logger.info(`Analyzing target: ${filePath}`);
-    exec(`pwsh -File C:\\App\\Debug-Dmps\\Debug-Dmps.ps1 -Target  ${filePath}`, (error, stdout, stderr) => {
+
+    try {
+        const analysisResult = await Analyze(filePath);
+        logger.info('Analysis output sent to client');
+        res.json(JSON.parse(analysisResult));
+    } catch (error) {
+        logger.error(`Failed to analyze target: ${error.message}`);
+        res.status(500).send("An error occurred while analyzing the file");
+    } finally {
         // Delete the file after processing
         fs.rm(filePath, { recursive: true, force: true }, (err) => {
             if (err) {
@@ -101,26 +109,7 @@ const analyzeFile = (filePath, res) => {
                 logger.info(`Deleted target: ${filePath}`);
             }
         });
-
-        if (error) {
-            logger.error(`Failed to analyze target: ${error.message}`);
-            res.status(500).send(`An error occurred while analyzing the file`);
-            return;
-        }
-        if (stderr) {
-            logger.error(`Stderr: ${stderr}`);
-            res.status(500).send(`An error occurred while analyzing the file`);
-            return;
-        }
-        try {
-            const jsonOutput = JSON.parse(stdout);
-            logger.info('Analysis output sent to client');
-            res.json(jsonOutput);
-        } catch (parseError) {
-            logger.error(`Failed to parse JSON output: ${parseError.message}`);
-            res.status(500).send('An error occured while parsing JSON output');
-        }
-    });
+    }
 };
 
 // PUT and POST endpoint to receive .dmp file or URL and analyze it
