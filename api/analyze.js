@@ -1,7 +1,22 @@
 import fs from 'fs';
-import path, { parse } from 'path';
+import path from 'path';
 import { exec } from 'child_process';
+import winston from 'winston';
 
+// Configure Winston logger
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+    ),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'app.log' })
+    ]
+});
+
+// Run the debugger over the dmp file and report errors should failure occur
 const processDmpObject = (dmp) => {
     return new Promise((resolve, reject) => {
         const parser = 'cdb.exe';
@@ -21,6 +36,7 @@ const processDmpObject = (dmp) => {
     });
 };
 
+// Split the raw content provided by processDmpObject
 const processResult = (rawContent) => {
     // Splitting the content
     let splits = rawContent.split('------------------');
@@ -32,16 +48,16 @@ const processResult = (rawContent) => {
     }
 
     // Pulling dmp info
-    let infos = splits[0].split('Bugcheck Analysis');
-    let dirtyDmpInfo0 = infos[0].split("Copyright (c) Microsoft Corporation. All rights reserved.");
-    let dirtyDmpInfo1 = dirtyDmpInfo0[1].split("Loading Kernel Symbols");
-    let dmpInfo = dirtyDmpInfo1[0].trim();
+    const infos = splits[0].split('Bugcheck Analysis');
+    const dirtyDmpInfo0 = infos[0].split("Copyright (c) Microsoft Corporation. All rights reserved.");
+    const dirtyDmpInfo1 = dirtyDmpInfo0[1].split("Loading Kernel Symbols");
+    const dmpInfo = dirtyDmpInfo1[0].trim();
 
     // Pulling Bugcheck Analysis
-    let analysis = infos[1].split('\n').filter(line => !line.includes('*') && !line.includes("Debugging Details:")).join('\n').trim();
+    const analysis = infos[1].split('\n').filter(line => !line.includes('*') && !line.includes("Debugging Details:")).join('\n').trim();
 
     // Output object creation
-    let output = {
+    const output = {
         dmpInfo: dmpInfo,
         analysis: analysis,
         rawContent: rawContent
@@ -50,8 +66,9 @@ const processResult = (rawContent) => {
     return output;
 };
 
+// Execute the analysis and processing over the single dmp or a directory of dmps
 const Analyze = async (target) => {
-    let dmpArray = [];
+    const dmpArray = [];
     const statPath = fs.statSync(target);
 
     if (!statPath.isDirectory()) {

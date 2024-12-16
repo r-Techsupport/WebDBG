@@ -1,7 +1,6 @@
 import express from 'express';
 import multer from 'multer';
 import axios from 'axios';
-import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { marked } from 'marked';
@@ -99,7 +98,7 @@ const analyzeFile = async (filePath, res) => {
         res.json(JSON.parse(analysisResult));
     } catch (error) {
         logger.error(`Failed to analyze target: ${error.message}`);
-        res.status(500).send(`An error occurred while analyzing the file`);
+        res.status(500).send("An error occurred while analyzing the file");
     } finally {
         // Delete the file after processing
         fs.rm(filePath, { recursive: true, force: true }, (err) => {
