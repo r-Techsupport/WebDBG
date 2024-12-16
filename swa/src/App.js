@@ -184,7 +184,7 @@ const FileUpload = () => {
                 </div>
                 <div id="content">
                 {!error && !responseData && <p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p>}
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {error && <p style={{ color: '#bf616a' }}>{error}</p>}
                 {responseData && (
                     <>{renderJsonToHtml(JSON.parse(responseData))}</>
                 )}
