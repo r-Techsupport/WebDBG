@@ -77,12 +77,13 @@ const Analyze = async (target) => {
         dmpArray.push(processedResult);
     } else {
         const files = fs.readdirSync(target).filter(file => file.endsWith('.dmp'));
-        for (const file of files) {
+        const promises = files.map(async (file) => {
             const dmp = path.resolve(target, file);
             const result = await processDmpObject(dmp);
-            const processedResult = processResult(result);
-            dmpArray.push(processedResult);
-        }
+            return processResult(result);
+        });
+        const results = await Promise.all(promises);
+        dmpArray.push(...results);
     }
 
     return JSON.stringify(dmpArray);
