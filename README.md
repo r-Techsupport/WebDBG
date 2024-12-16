@@ -11,9 +11,6 @@ This project is hosted publicly on a best effort basis at https://webdbg.rtech.s
 - [WinDebug-Container](https://github.com/PipeItToDevNull/WinDebug-Container)
     - The base container for the API.
     - Windows Core 2022 image containing Windows SDK with only Debugging Tools installed.
-- [Debug-Dmps](https://github.com/PipeItToDevNull/Debug-Dmps)
-    - The current PowerShell based backend processor.
-    - There is an [open issue](https://github.com/r-Techsupport/WebDBG/issues/13) to rewrite the backend in JS.
 
 ## SWA
 Configure the SWA by copying `env.example` to `.env` and configuring appropriately.
