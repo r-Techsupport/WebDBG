@@ -89,6 +89,7 @@ app.use((req, res, next) => {
     next();
 });
 
+// Function to execute analysis commands on local files
 const analyzeFile = async (filePath, res) => {
     logger.info(`Analyzing target: ${filePath}`);
 

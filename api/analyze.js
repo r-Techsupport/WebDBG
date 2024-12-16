@@ -25,7 +25,6 @@ const processDmpObject = (dmp) => {
         exec(`${parser} ${command}`, (error, stdout, stderr) => {
             if (error) {
                 logger.error(`Error during analysis: ${error.message}`);
-                reject(`Error during analysis: ${error.message}`);
                 return;
             }
             if (stderr) {
