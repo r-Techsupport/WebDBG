@@ -75,7 +75,7 @@ const Analyze = async (target) => {
         const result = await processDmpObject(dmp);
         const processedResult = processResult(result);
         dmpArray.push(processedResult);
-    } else {
+    } else { // Run a job for every dmp file found, this drastically reduces processing time
         const files = fs.readdirSync(target).filter(file => file.endsWith('.dmp'));
         const promises = files.map(async (file) => {
             const dmp = path.resolve(target, file);
