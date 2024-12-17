@@ -5,7 +5,7 @@ FROM ghcr.io/pipeittodevnull/windebug-container:latest
 RUN powershell -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
 
 # Install Node.js using Chocolatey
-RUN choco install nodejs-lts pwsh -y
+RUN choco install nodejs-lts -y
 
 # Set the working directory
 WORKDIR C:\\app
