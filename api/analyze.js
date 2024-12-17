@@ -19,6 +19,7 @@ const logger = winston.createLogger({
 // Run the debugger over the dmp file and report errors should failure occur
 const processDmpObject = (dmp) => {
     return new Promise((resolve) => {
+        logger.info(`Analysis started on ${dmp}`)
         const parser = 'cdb.exe';
         const command = `-z ${dmp} -c "k; !analyze -v ; q"`;
 

@@ -42,17 +42,14 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
 
-// Set our filename based on the first octet of a UUID
-const shortUUID = uuidv4().split('-')[0]; // Get the first part of the UUID
-const uploadName = `${shortUUID}`;
-const uploadPath = path.join(uploadsDir, `${uploadName}`);
-
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
+        const uploadName = uuidv4().split('-')[0]; // Generate a unique upload name
+        req.uploadName = uploadName; // Store the upload name in the request object
         cb(null, uploadName);
     }
 });
@@ -91,7 +88,7 @@ app.use((req, res, next) => {
 
 // Function to execute analysis commands on local files
 const analyzeFile = async (filePath, res) => {
-    logger.info(`Analyzing target: ${filePath}`);
+    logger.info(`Sending target: ${filePath} for analysis`);
 
     try {
         const analysisResult = await Analyze(filePath);
@@ -101,19 +98,19 @@ const analyzeFile = async (filePath, res) => {
         logger.error(`Failed to analyze target: ${error.message}`);
         res.status(500).send("An error occurred while analyzing the file");
     } finally {
-        // Delete the file after processing
-        fs.rm(filePath, { recursive: true, force: true }, (err) => {
-            if (err) {
-                logger.error(`Failed to delete target: ${err.message}`);
-            } else {
-                logger.info(`Deleted target: ${filePath}`);
-            }
-        });
+        try {
+            await fs.promises.rm(filePath, { recursive: true, force: true });
+            logger.info(`Deleted target: ${filePath}`);
+        } catch (err) {
+            logger.error(`Failed to delete target: ${err.message}`);
+        }
     }
 };
 
 // PUT and POST endpoint to receive .dmp file or URL and analyze it
 const handleAnalyzeDmp = async (req, res) => {
+    const uploadName = req.uploadName; // Retrieve the upload name from the request object
+    const uploadPath = path.join(uploadsDir, `${uploadName}`);
 
     if (req.file) { // If a file is uploaded
         logger.info(`File uploaded: ${uploadPath}`);
@@ -190,14 +187,13 @@ const handleAnalyzeDmp = async (req, res) => {
             logger.info('File is a DMP in PAGE format');
 
             const filePath = `${uploadPath}.dmp`;
-            fs.rename(uploadPath, filePath, (err) => {
-                if (err) {
-                    logger.error('Failed to rename file:', err);
-                    res.status(500).send(`An error occured while renaming file: ${error.message}`);
-                } else {
-                    logger.info(`Renamed file: ${filePath}`);
-                }
-            });
+            try {
+                await fs.promises.rename(uploadPath, filePath);
+                logger.info(`Renamed file: ${filePath}`);
+            } catch (err) {
+                logger.error('Failed to rename file:', err);
+                res.status(500).send(`An error occurred while renaming file: ${err.message}`);
+            }
 
             analyzeFile(filePath, res)
         } else {
