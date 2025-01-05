@@ -265,6 +265,13 @@ app.get('/', (req, res) => {
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            logger.warn('File size exceeds the limit of 10MB');
+            return res.status(400).send('File size exceeds the limit of 10MB');
+        }
+    }
+
     logger.error(`Unhandled failure: ${err.stack}`);
     res.status(500).send('Something broke, I lost my 418');
 });
