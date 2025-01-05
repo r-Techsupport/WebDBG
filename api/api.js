@@ -86,6 +86,17 @@ app.use((req, res, next) => {
     next();
 });
 
+// Function to delete our file after processing or an error
+const deleteFile = async (deletePath) => {
+    try {
+        await fs.promises.rm(deletePath, { recursive: true, force: true });
+        logger.info(`Deleted target: ${deletePath}`);
+    } catch (err) {
+        logger.error(`Failed to delete target: ${err.message}`);
+    }
+};
+
+
 // Function to execute analysis commands on local files
 const analyzeFile = async (filePath, res) => {
     logger.info(`Sending target: ${filePath} for analysis`);
@@ -98,12 +109,7 @@ const analyzeFile = async (filePath, res) => {
         logger.error(`Failed to analyze target: ${error.message}`);
         res.status(500).send("An error occurred while analyzing the file");
     } finally {
-        try {
-            await fs.promises.rm(filePath, { recursive: true, force: true });
-            logger.info(`Deleted target: ${filePath}`);
-        } catch (err) {
-            logger.error(`Failed to delete target: ${err.message}`);
-        }
+        await deleteFile(filePath);
     }
 };
 
@@ -170,13 +176,16 @@ const handleAnalyzeDmp = async (req, res) => {
             .pipe(unzipper.Extract({ path: filePath }))
             .on('close', () => {
                 logger.info(`.zip file extracted: ${filePath}`);
+                deleteFile(uploadPath); // Delete zip file
 
                 // Check for subdirectories and for more than 10 files in a zip
-                // Then analyze the directory if the checks pass
+                // If the checks fail delete the extracted directory
+                // if the checks pass analyze the directory
                 fs.readdir(filePath, { withFileTypes: true }, (err, files) => { 
                     if (err) {
                         logger.error(`Failed to read extracted directory: ${err.message}`);
                         res.status(500).send(`An error occurred while reading the extracted directory: ${err.message}`);
+                        deleteFile(filePath);
                         return;
                     }
 
@@ -184,9 +193,11 @@ const handleAnalyzeDmp = async (req, res) => {
                     if (hasSubdirectories) {
                         logger.warn('Archive contains subdirectories');
                         res.status(400).send('Uploaded archive contains subdirectories .dmps must be loose files inside the single archive');
+                        deleteFile(filePath);
                     } else if (files.length > 10) {
                         logger.warn('Archive contains more than 10 files');
                         res.status(400).send('Uploaded archive contains more than 10 files');
+                        deleteFile(filePath);
                     } else {
                         analyzeFile(filePath, res);
                     }
@@ -196,10 +207,13 @@ const handleAnalyzeDmp = async (req, res) => {
             .on('error', (err) => {
                 logger.error(`Failed to extract .zip file: ${err.message}`);
                 res.status(500).send(`An error occured while extracting .zip file: ${err.message}`);
+                deleteFile(uploadPath);
             });
         } else {
             logger.warn('Unsupported file type');
             res.status(400).send('Unsupported file type');
+            await deleteFile(uploadPath);
+            return;
         }
 
     // If mimetype is undefined check the first 4 bytes of the file
@@ -219,6 +233,7 @@ const handleAnalyzeDmp = async (req, res) => {
             } catch (err) {
                 logger.error('Failed to rename file:', err);
                 res.status(500).send(`An error occurred while renaming file: ${err.message}`);
+                await deleteFile(uploadPath);
             }
 
             analyzeFile(filePath, res)
@@ -226,6 +241,7 @@ const handleAnalyzeDmp = async (req, res) => {
             logger.info(`File type was: ${mimeType}`)
             logger.warn('Unsupported file type');
             res.status(400).send('Unsupported file type');
+            await deleteFile(uploadPath);
         }
     }
 };
