@@ -168,7 +168,18 @@ const handleAnalyzeDmp = async (req, res) => {
             .pipe(unzipper.Extract({ path: filePath }))
             .on('close', () => {
                 logger.info(`.zip file extracted: ${filePath}`);
-                analyzeFile(filePath, res); // Analyze the extracted directory
+
+                fs.readdir(filePath, { withFileTypes: true }, (err, files) => { // Check for subdirectories
+                    const hasSubdirectories = files.some(file => file.isDirectory());
+
+                    if (hasSubdirectories) {
+                        logger.warn('Archive contains subdirectories');
+                        res.status(400).send('Uploaded archive contains subdirectories .dmps must be loose files inside the single archive');
+                    } else {
+                        analyzeFile(filePath, res); // Finally analyze the extracted directory
+                    }
+                });
+
             })
             .on('error', (err) => {
                 logger.error(`Failed to extract .zip file: ${err.message}`);
