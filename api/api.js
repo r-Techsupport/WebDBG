@@ -175,7 +175,7 @@ const handleAnalyzeDmp = async (req, res) => {
                 // Then analyze the directory if the checks pass
                 fs.readdir(filePath, { withFileTypes: true }, (err, files) => { 
                     if (err) {
-                        logger.error(`Failed to read directory: ${err.message}`);
+                        logger.error(`Failed to read extracted directory: ${err.message}`);
                         res.status(500).send(`An error occurred while reading the extracted directory: ${err.message}`);
                         return;
                     }
