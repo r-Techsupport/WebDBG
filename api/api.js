@@ -98,7 +98,7 @@ const deleteFile = async (deletePath) => {
 
 // Function to check the first 4 bytes of a file
 // If they are PAGE then it is a valid DMP
-const checkFileHeader = (checkPath, logger, res) => {
+const checkFileHeader = (checkPath) => {
     const buffer = readChunkSync(checkPath, { length: 4, startPosition: 0 });
     const fileHead = Array.from(buffer).map(byte => String.fromCharCode(byte)).join('');
     if (fileHead !== 'PAGE') {
@@ -218,7 +218,6 @@ const handleAnalyzeDmp = async (req, res) => {
                             logger.warn('Archive contains unsupported file types');
                             res.status(400).send('Uploaded archive contains unsupported file types');
                             deleteFile(filePath);
-                            return;
                         } else {
                             analyzeFile(filePath, res);
                         }
@@ -252,7 +251,7 @@ const handleAnalyzeDmp = async (req, res) => {
             }
             analyzeFile(filePath, res);
         } else {
-            res.status(400).send(`Unsupported file header, file is not a valid .dmp`);
+            res.status(400).send('Unsupported file header, file is not a valid .dmp');
             await deleteFile(uploadPath);
         }
     }
