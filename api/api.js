@@ -170,8 +170,13 @@ const handleAnalyzeDmp = async (req, res) => {
                 logger.info(`.zip file extracted: ${filePath}`);
 
                 fs.readdir(filePath, { withFileTypes: true }, (err, files) => { // Check for subdirectories
-                    const hasSubdirectories = files.some(file => file.isDirectory());
+                    if (err) {
+                        logger.error(`Failed to read directory: ${err.message}`);
+                        res.status(500).send(`An error occurred while reading the extracted directory: ${err.message}`);
+                        return;
+                    }
 
+                    const hasSubdirectories = files.some(file => file.isDirectory());
                     if (hasSubdirectories) {
                         logger.warn('Archive contains subdirectories');
                         res.status(400).send('Uploaded archive contains subdirectories .dmps must be loose files inside the single archive');
