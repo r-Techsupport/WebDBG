@@ -213,7 +213,6 @@ const handleAnalyzeDmp = async (req, res) => {
             logger.warn('Unsupported file type');
             res.status(400).send('Unsupported file type');
             await deleteFile(uploadPath);
-            return;
         }
 
     // If mimetype is undefined check the first 4 bytes of the file
