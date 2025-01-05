@@ -96,6 +96,19 @@ const deleteFile = async (deletePath) => {
     }
 };
 
+// Function to check the first 4 bytes of a file
+// If they are PAGE then it is a valid DMP
+const checkFileHeader = (checkPath, logger, res) => {
+    const buffer = readChunkSync(checkPath, { length: 4, startPosition: 0 });
+    const fileHead = Array.from(buffer).map(byte => String.fromCharCode(byte)).join('');
+    if (fileHead !== 'PAGE') {
+        logger.warn(`Unsupported file header: ${fileHead}`);
+        return false;
+    }
+    logger.info('File is a DMP with PAGE header');
+    return true;
+};
+
 
 // Function to execute analysis commands on local files
 const analyzeFile = async (filePath, res) => {
@@ -180,15 +193,16 @@ const handleAnalyzeDmp = async (req, res) => {
 
                 // Check for subdirectories and for more than 10 files in a zip
                 // If the checks fail delete the extracted directory
-                // if the checks pass analyze the directory
-                fs.readdir(filePath, { withFileTypes: true }, (err, files) => { 
+                // if the checks the contained files for their headers, fail entirely on any single file
+                // Finally  analyze the directory
+                fs.readdir(filePath, { withFileTypes: true }, (err, files) => {
                     if (err) {
                         logger.error(`Failed to read extracted directory: ${err.message}`);
                         res.status(500).send(`An error occurred while reading the extracted directory: ${err.message}`);
                         deleteFile(filePath);
                         return;
                     }
-
+                
                     const hasSubdirectories = files.some(file => file.isDirectory());
                     if (hasSubdirectories) {
                         logger.warn('Archive contains subdirectories');
@@ -199,7 +213,15 @@ const handleAnalyzeDmp = async (req, res) => {
                         res.status(400).send('Uploaded archive contains more than 10 files');
                         deleteFile(filePath);
                     } else {
-                        analyzeFile(filePath, res);
+                        const invalidFiles = files.filter(file => !checkFileHeader(path.join(filePath, file.name), logger, res));
+                        if (invalidFiles.length > 0) {
+                            logger.warn('Archive contains unsupported file types');
+                            res.status(400).send('Uploaded archive contains unsupported file types');
+                            deleteFile(filePath);
+                            return;
+                        } else {
+                            analyzeFile(filePath, res);
+                        }
                     }
                 });
 
@@ -215,16 +237,10 @@ const handleAnalyzeDmp = async (req, res) => {
             await deleteFile(uploadPath);
         }
 
-    // If mimetype is undefined check the first 4 bytes of the file
-    // If they are PAGE then we know it is a DMP and can process it
-    // Otherwise reject the file
+    // If mimetype is undefined use the checkFileHeader function
+    // to check  first 4 bytes of the file, otherwise reject the file
     } else {
-        const fileHeadBuffer = readChunkSync(uploadPath, { length: 4, startPosition: 0 })
-        const fileHead = Array.from(fileHeadBuffer).map(byte => String.fromCharCode(byte)).join('');
-        logger.info(`First 4 bytes: ${fileHead}`);
-        if (fileHead === 'PAGE') {
-            logger.info('File is a DMP in PAGE format');
-
+        if (checkFileHeader(uploadPath, logger, res)) { 
             const filePath = `${uploadPath}.dmp`;
             try {
                 await fs.promises.rename(uploadPath, filePath);
@@ -234,12 +250,9 @@ const handleAnalyzeDmp = async (req, res) => {
                 res.status(500).send(`An error occurred while renaming file: ${err.message}`);
                 await deleteFile(uploadPath);
             }
-
-            analyzeFile(filePath, res)
+            analyzeFile(filePath, res);
         } else {
-            logger.info(`File type was: ${mimeType}`)
-            logger.warn('Unsupported file type');
-            res.status(400).send('Unsupported file type');
+            res.status(400).send(`Unsupported file header, file is not a valid .dmp`);
             await deleteFile(uploadPath);
         }
     }
