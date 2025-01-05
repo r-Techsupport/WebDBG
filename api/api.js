@@ -157,7 +157,9 @@ const handleAnalyzeDmp = async (req, res) => {
     const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
     const mimeType = fileType(buffer);
 
-    if (mimeType) { // If mimetype returns a valid response
+    // If mimetype returns a valid response check that it is a zip
+    // otherwise it is not valid and we reject it
+    if (mimeType) { 
         logger.info(`File type is: ${mimeType.mime}`)
 
         if (mimeType.mime === 'application/zip') {
@@ -169,7 +171,9 @@ const handleAnalyzeDmp = async (req, res) => {
             .on('close', () => {
                 logger.info(`.zip file extracted: ${filePath}`);
 
-                fs.readdir(filePath, { withFileTypes: true }, (err, files) => { // Check for subdirectories
+                // Check for subdirectories and for more than 10 files in a zip
+                // Then analyze the directory if the checks pass
+                fs.readdir(filePath, { withFileTypes: true }, (err, files) => { 
                     if (err) {
                         logger.error(`Failed to read directory: ${err.message}`);
                         res.status(500).send(`An error occurred while reading the extracted directory: ${err.message}`);
@@ -180,8 +184,11 @@ const handleAnalyzeDmp = async (req, res) => {
                     if (hasSubdirectories) {
                         logger.warn('Archive contains subdirectories');
                         res.status(400).send('Uploaded archive contains subdirectories .dmps must be loose files inside the single archive');
+                    } else if (files.length > 10) {
+                        logger.warn('Archive contains more than 10 files');
+                        res.status(400).send('Uploaded archive contains more than 10 files');
                     } else {
-                        analyzeFile(filePath, res); // Finally analyze the extracted directory
+                        analyzeFile(filePath, res);
                     }
                 });
 
@@ -195,7 +202,10 @@ const handleAnalyzeDmp = async (req, res) => {
             res.status(400).send('Unsupported file type');
         }
 
-    } else { // If mimetype is undefined check the first 4 bytes of the file
+    // If mimetype is undefined check the first 4 bytes of the file
+    // If they are PAGE then we know it is a DMP and can process it
+    // Otherwise reject the file
+    } else {
         const fileHeadBuffer = readChunkSync(uploadPath, { length: 4, startPosition: 0 })
         const fileHead = Array.from(fileHeadBuffer).map(byte => String.fromCharCode(byte)).join('');
         logger.info(`First 4 bytes: ${fileHead}`);
