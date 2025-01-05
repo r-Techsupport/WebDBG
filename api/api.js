@@ -269,7 +269,6 @@ app.use((err, req, res, next) => {
             logger.warn('File size exceeds the limit of 10MB');
             return res.status(400).send('File size exceeds the limit of 10MB');
         }
-        return null;
     }
 
     logger.error(`Unhandled failure: ${err.stack}`);
