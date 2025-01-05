@@ -213,7 +213,7 @@ const handleAnalyzeDmp = async (req, res) => {
                         res.status(400).send('Uploaded archive contains more than 10 files');
                         deleteFile(filePath);
                     } else {
-                        const invalidFiles = files.filter(file => !checkFileHeader(path.join(filePath, file.name), logger, res));
+                        const invalidFiles = files.filter(file => !checkFileHeader(path.join(filePath, file.name)));
                         if (invalidFiles.length > 0) {
                             logger.warn('Archive contains unsupported file types');
                             res.status(400).send('Uploaded archive contains unsupported file types');
@@ -239,7 +239,7 @@ const handleAnalyzeDmp = async (req, res) => {
     // If mimetype is undefined use the checkFileHeader function
     // to check  first 4 bytes of the file, otherwise reject the file
     } else {
-        if (checkFileHeader(uploadPath, logger, res)) { 
+        if (checkFileHeader(uploadPath)) { 
             const filePath = `${uploadPath}.dmp`;
             try {
                 await fs.promises.rename(uploadPath, filePath);
