@@ -16,7 +16,8 @@ const logger = winston.createLogger({
 
 // Configuration object for bugcheck commands
 const bugcheckCommands = {
-    '9f': (args) => `cdb.exe -z ${dmp} -c "k; !devstack ${args[1]}`,
+    '9f': (args) => `!devstack ${args[1]}`,
+    '7E': (args) => `!devstack ${args[0]}`
     // Add more bugcheck commands here as needed
 };
 

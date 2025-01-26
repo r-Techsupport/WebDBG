@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import winston from 'winston';
+import postProcessResults from './post-process.js';
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -99,7 +100,9 @@ const Analyze = async (target) => {
         dmpArray.push(...results);
     }
 
-    return JSON.stringify(dmpArray);
+    // Call the postProcessResults function
+    const postProcessedResults = postProcessResults(dmpArray);
+    return JSON.stringify(postProcessedResults);
 };
 
 export default Analyze;
