@@ -45,14 +45,13 @@ const postProcessResults = async (results, parser) => {
         if (commandGenerator) {
             const command = commandGenerator(parser, result.dmp, result.args);
             logger.info(`Executing command: ${command}`);
-            logger.info(`Bugcheck: ${result.bugcheck}, Args: ${result.args}`);
             try {
                 const output = await executeCommand(command);
                 result.post = output;
-                logger.info(`Command output: ${output}`);
+                logger.info('Post-process completed');
             } catch (error) {
                 result.post = error;
-                logger.error(`Error executing command: ${error}`);
+                logger.error(`An error occured while post-processing the file: ${error}`);
             }
         } else {
             result.post = null; // Add a null post key if no command is run

@@ -66,8 +66,7 @@ const processResult = (dmp, rawContent) => {
 
     const argMatches = analysis.match(/Arg\d: ([0-9a-fA-Fx]+)/g);
     const args = argMatches ? argMatches.map(arg => arg.split(': ')[1]) : [];
-    logger.info(`Bugcheck: ${bugcheck}`)
-    logger.info(`Args: ${args}`)
+    logger.info(`Bugcheck: ${bugcheck}, Args: ${args}`);
 
     // Output object creation
     const output = {
