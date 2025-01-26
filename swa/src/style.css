@@ -56,6 +56,14 @@ body {
 .result-header.analysis {
     visibility: hidden;
 }
+
+.result-header.post::before {
+    content: "Post Processing";
+    visibility: visible;
+}
+.result-header.post {
+    visibility: hidden;
+}
 .result-header.dmpInfo::before {
     content: "Dump Info";
     visibility: visible;

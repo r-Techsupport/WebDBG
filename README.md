@@ -1,6 +1,11 @@
 # WebDBG
 A React Static Web App (SWA) frontend with a containerized Javascript API backend that injests `.dmp` files and returns analyzed text.
 
+## Analysis
+By default `!analyze -v` is executed against each dump and the results are returned. Advanced post-processing can be configured in `/api/post-process.js` in `bugcheckCommands`. 
+
+Specify any Bugcheck you want to act up and define the comamnd that should be run against that dump. This app is limited to one additional command per dump, additional commands would require additional logic. Please open an issue if this is required.
+
 ## Public Site
 This project is hosted publicly on a best effort basis at https://webdbg.rtech.support as a service by the [r/Techsupport Discord Server](https://rtech.support/discord).
 

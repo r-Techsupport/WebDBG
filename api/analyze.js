@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import winston from 'winston';
+import postProcessResults from './post-process.js'; // Corrected import path
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -16,11 +17,13 @@ const logger = winston.createLogger({
     ]
 });
 
+// Define the parser
+const parser = 'cdb.exe';
+
 // Run the debugger over the dmp file and report errors should failure occur
 const processDmpObject = (dmp) => {
     return new Promise((resolve) => {
         logger.info(`Analysis started on ${dmp}`)
-        const parser = 'cdb.exe';
         const command = `-z ${dmp} -c "k; !analyze -v ; q"`;
 
         exec(`${parser} ${command}`, (error, stdout, stderr) => {
@@ -37,7 +40,7 @@ const processDmpObject = (dmp) => {
 };
 
 // Split the raw content provided by processDmpObject
-const processResult = (rawContent) => {
+const processResult = (dmp, rawContent) => {
     // Splitting the content
     let splits = rawContent.split('------------------');
     splits = splits.flatMap(split => split.split('STACK_TEXT:'));
@@ -63,11 +66,11 @@ const processResult = (rawContent) => {
 
     const argMatches = analysis.match(/Arg\d: ([0-9a-fA-Fx]+)/g);
     const args = argMatches ? argMatches.map(arg => arg.split(': ')[1]) : [];
-    logger.info(`Bugcheck: ${bugcheck}`)
-    logger.info(`Args: ${args}`)
+    logger.info(`Bugcheck: ${bugcheck}, Args: ${args}`);
 
     // Output object creation
     const output = {
+        dmp: dmp, // Include the dmp file path
         dmpInfo: dmpInfo,
         analysis: analysis,
         bugcheck: bugcheck,
@@ -86,20 +89,23 @@ const Analyze = async (target) => {
     if (!statPath.isDirectory()) {
         const dmp = path.resolve(target);
         const result = await processDmpObject(dmp);
-        const processedResult = processResult(result);
+        const processedResult = processResult(dmp, result);
         dmpArray.push(processedResult);
     } else { // Run a job for every dmp file found, this drastically reduces processing time
         const files = fs.readdirSync(target).filter(file => file.endsWith('.dmp'));
         const promises = files.map(async (file) => {
             const dmp = path.resolve(target, file);
             const result = await processDmpObject(dmp);
-            return processResult(result);
+            return processResult(dmp, result);
         });
         const results = await Promise.all(promises);
         dmpArray.push(...results);
     }
 
-    return JSON.stringify(dmpArray);
+    // Call the postProcessResults function with the parser
+    const postProcessedResults = await postProcessResults(dmpArray, parser);
+
+    return JSON.stringify(postProcessedResults);
 };
 
 export default Analyze;

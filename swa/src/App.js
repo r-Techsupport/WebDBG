@@ -116,6 +116,7 @@ const FileUpload = () => {
         const order = [
             "dmpInfo",
             "analysis",
+            "post",
             "rawContent",
         ];
         const specialKeys = ["rawContent"];
