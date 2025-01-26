@@ -16,8 +16,7 @@ const logger = winston.createLogger({
 
 // Configuration object for bugcheck commands
 const bugcheckCommands = {
-    '9f': (args) => `!devstack ${args[1]}`,
-    '7E': (args) => `!devstack ${args[0]}`
+    '9f': (dmp, args) => `cdb.exe -z ${dmp} -c "k; !devstack ${args[1]} ; q"`,
     // Add more bugcheck commands here as needed
 };
 
@@ -41,7 +40,7 @@ const postProcessResults = async (results) => {
     for (const result of results) {
         const commandGenerator = bugcheckCommands[result.bugcheck];
         if (commandGenerator) {
-            const command = commandGenerator(result.args);
+            const command = commandGenerator(result.dmp, result.args);
             logger.info(`Executing command: ${command}`);
             try {
                 const output = await executeCommand(command);

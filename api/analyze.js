@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import winston from 'winston';
-import postProcessResults from './post-process.js';
+import postProcessResults from './post-process.js'; // Corrected import path
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -38,7 +38,7 @@ const processDmpObject = (dmp) => {
 };
 
 // Split the raw content provided by processDmpObject
-const processResult = (rawContent) => {
+const processResult = (dmp, rawContent) => {
     // Splitting the content
     let splits = rawContent.split('------------------');
     splits = splits.flatMap(split => split.split('STACK_TEXT:'));
@@ -69,6 +69,7 @@ const processResult = (rawContent) => {
 
     // Output object creation
     const output = {
+        dmp: dmp, // Include the dmp file path
         dmpInfo: dmpInfo,
         analysis: analysis,
         bugcheck: bugcheck,
@@ -87,21 +88,22 @@ const Analyze = async (target) => {
     if (!statPath.isDirectory()) {
         const dmp = path.resolve(target);
         const result = await processDmpObject(dmp);
-        const processedResult = processResult(result);
+        const processedResult = processResult(dmp, result);
         dmpArray.push(processedResult);
     } else { // Run a job for every dmp file found, this drastically reduces processing time
         const files = fs.readdirSync(target).filter(file => file.endsWith('.dmp'));
         const promises = files.map(async (file) => {
             const dmp = path.resolve(target, file);
             const result = await processDmpObject(dmp);
-            return processResult(result);
+            return processResult(dmp, result);
         });
         const results = await Promise.all(promises);
         dmpArray.push(...results);
     }
 
     // Call the postProcessResults function
-    const postProcessedResults = postProcessResults(dmpArray);
+    const postProcessedResults = await postProcessResults(dmpArray);
+
     return JSON.stringify(postProcessedResults);
 };
 
