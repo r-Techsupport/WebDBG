@@ -54,7 +54,7 @@ const postProcessResults = async (results, parser) => {
                 logger.error(`An error occured while post-processing the file: ${error}`);
             }
         } else {
-            result.post = null; // Add a null post key if no command is run
+            result.post = "No post processing configured for this bugcheck" // Add a null post key if no command is run
             logger.info(`No command for bugcheck: ${result.bugcheck}`);
         }
     }
