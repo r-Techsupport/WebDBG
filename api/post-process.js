@@ -28,7 +28,7 @@ const executeCommand = (command) => {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                reject(`Error: ${error.message}`);
+                reject(error);
             } else if (stderr) {
                 resolve(`Warnings: ${stderr}`);
             } else {
