@@ -18,6 +18,9 @@ const logger = winston.createLogger({
 const bugcheckCommands = {
     '9f': (dmp, args) => `cdb.exe -z ${dmp} -c "k; !devstack ${args[1]} ; q"`,
     // Add more bugcheck commands here as needed
+    // '<bugcheck>': (dmp, args) => `cdb.exe -z ${dmp} -c "k; <commands to run> ; q"`,
+    // Args can be used in a command ${args[#]}
+    // Arg counts start at 0 so "Arg1" is ${args[0]}
 };
 
 // Function to execute a command and return a promise
