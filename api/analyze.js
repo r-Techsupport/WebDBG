@@ -17,11 +17,13 @@ const logger = winston.createLogger({
     ]
 });
 
+// Define the parser
+const parser = 'cdb.exe';
+
 // Run the debugger over the dmp file and report errors should failure occur
 const processDmpObject = (dmp) => {
     return new Promise((resolve) => {
         logger.info(`Analysis started on ${dmp}`)
-        const parser = 'cdb.exe';
         const command = `-z ${dmp} -c "k; !analyze -v ; q"`;
 
         exec(`${parser} ${command}`, (error, stdout, stderr) => {
@@ -101,8 +103,8 @@ const Analyze = async (target) => {
         dmpArray.push(...results);
     }
 
-    // Call the postProcessResults function
-    const postProcessedResults = await postProcessResults(dmpArray);
+    // Call the postProcessResults function with the parser
+    const postProcessedResults = await postProcessResults(dmpArray, parser);
 
     return JSON.stringify(postProcessedResults);
 };
