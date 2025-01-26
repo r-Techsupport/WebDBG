@@ -54,12 +54,24 @@ const processResult = (rawContent) => {
     const dmpInfo = dirtyDmpInfo1[0].trim();
 
     // Pulling Bugcheck Analysis
-    const analysis = infos[1].split('\n').filter(line => !line.includes('*') && !line.includes("Debugging Details:")).join('\n').trim();
+    const analysisLines = infos[1].split('\n').filter(line => !line.includes('*') && !line.includes("Debugging Details:"));
+    const analysis = analysisLines.join('\n').trim();
+
+    // Extracting bugcheck and arguments
+    const bugcheckMatch = analysis.match(/\(([^)]+)\)/);
+    const bugcheck = bugcheckMatch ? bugcheckMatch[1] : null;
+
+    const argMatches = analysis.match(/Arg\d: ([0-9a-fA-Fx]+)/g);
+    const args = argMatches ? argMatches.map(arg => arg.split(': ')[1]) : [];
+    logger.info(`Bugcheck: ${bugcheck}`)
+    logger.info(`Args: ${args}`)
 
     // Output object creation
     const output = {
         dmpInfo: dmpInfo,
         analysis: analysis,
+        bugcheck: bugcheck,
+        args: args,
         rawContent: rawContent
     };
 
