@@ -193,7 +193,7 @@ const handleAnalyzeDmp = async (req, res) => {
 
                 // Check for subdirectories and for more than 10 files in a zip
                 // If the checks fail delete the extracted directory
-                // if the checks the contained files for their headers, fail entirely on any single file
+                // it then checks the contained files for their headers, fail entirely on any single file
                 // Finally  analyze the directory
                 fs.readdir(filePath, { withFileTypes: true }, (err, files) => {
                     if (err) {
@@ -202,7 +202,6 @@ const handleAnalyzeDmp = async (req, res) => {
                         deleteFile(filePath);
                         return;
                     }
-                
                     const hasSubdirectories = files.some(file => file.isDirectory());
                     if (hasSubdirectories) {
                         logger.warn('Archive contains subdirectories');
