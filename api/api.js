@@ -211,18 +211,26 @@ const handleAnalyzeDmp = async (req, res) => {
 
                     const hasSubdirectories = files.some(file => file.isDirectory()); 
                     const hasMinidumpSubdirectory = files.some(file => file.isDirectory() && file.name === 'Minidump');
+
+                    // If there is a Minidumps subdirectory adjust our variable then analyze
                     if (hasMinidumpSubdirectory) {
                         logger.info('Archive contains Minidumps directory');
                         const filePath0 = `${filePath}\\Minidump`;
                          analyzeFile(filePath0, res);
+
+                    // if there are subdirectories that are not Minidump return 400
                     } else if (hasSubdirectories) {
                         logger.warn('Archive contains invalid subdirectories');
                         res.status(400).send('Uploaded archive contains invalid subdirectories. .dmps must be loose files inside the single archive or in a Minidump directory');
                         deleteFile(filePath);
+
+                    // If more than 10 files in an archive return 400
                     } else if (files.length > 10) {
                         logger.warn('Archive contains more than 10 files');
                         res.status(400).send('Uploaded archive contains more than 10 files');
                         deleteFile(filePath);
+                    
+                    // If no subdirectories validate the files then analyze
                     } else {
                         const invalidFiles = files.filter(file => !checkFileHeader(path.join(filePath, file.name)));
                         if (invalidFiles.length > 0) {
