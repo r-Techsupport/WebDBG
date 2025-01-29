@@ -213,10 +213,22 @@ const handleAnalyzeDmp = async (req, res) => {
                     const hasMinidumpSubdirectory = files.some(file => file.isDirectory() && file.name === 'Minidump');
 
                     // If there is a Minidumps subdirectory adjust our variable then analyze
+                    // We assume there are no invalid files in a Minidumps directory
+                    // Testing shows the API won't choke on invalid files so meh
                     if (hasMinidumpSubdirectory) {
                         logger.info('Archive contains Minidumps directory');
                         const filePath0 = `${filePath}\\Minidump`;
-                         analyzeFile(filePath0, res);
+
+                        // List files in filePath0
+                        const filesInMinidump = fs.readdirSync(filePath0);
+                        logger.info('Files in the Minidump directory:');
+                        filesInMinidump.forEach(file => {
+                            const filePath = path.join(filePath0, file);
+                            const isDirectory = fs.statSync(filePath).isDirectory();
+                            logger.info(`    - ${file} ${isDirectory ? '(directory)' : '(file)'}`);
+                        });
+
+                        analyzeFile(filePath0, res);
 
                     // if there are subdirectories that are not Minidump return 400
                     } else if (hasSubdirectories) {
