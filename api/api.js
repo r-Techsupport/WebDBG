@@ -193,7 +193,7 @@ const handleAnalyzeDmp = async (req, res) => {
 
                 // Check for subdirectories and for more than 10 files in a zip
                 // If the checks fail delete the extracted directory
-                // if the checks the contained files for their headers, fail entirely on any single file
+                // it then checks the contained files for their headers, fail entirely on any single file
                 // Finally  analyze the directory
                 fs.readdir(filePath, { withFileTypes: true }, (err, files) => {
                     if (err) {
@@ -202,24 +202,55 @@ const handleAnalyzeDmp = async (req, res) => {
                         deleteFile(filePath);
                         return;
                     }
-                
-                    const hasSubdirectories = files.some(file => file.isDirectory());
-                    if (hasSubdirectories) {
-                        logger.warn('Archive contains subdirectories');
-                        res.status(400).send('Uploaded archive contains subdirectories .dmps must be loose files inside the single archive');
+
+                    // Log files contained in the archive
+                    logger.info('Files in the archive:');
+                    files.forEach(file => {
+                        logger.info(`    - ${file.name} ${file.isDirectory() ? '(directory)' : '(file)'}`);
+                    });
+
+                    const hasSubdirectories = files.some(file => file.isDirectory()); 
+                    const hasMinidumpSubdirectory = files.some(file => file.isDirectory() && file.name === 'Minidump');
+
+                    // If there is a Minidumps subdirectory adjust our variable then analyze
+                    // We assume there are no invalid files in a Minidumps directory
+                    // Testing shows the API won't choke on invalid files so meh
+                    if (hasMinidumpSubdirectory) {
+                        logger.info('Archive contains Minidumps directory');
+                        const filePath0 = `${filePath}\\Minidump`;
+
+                        // List files in filePath0
+                        const filesInMinidump = fs.readdirSync(filePath0);
+                        logger.info('Files in the Minidump directory:');
+                        filesInMinidump.forEach(file => {
+                            const miniPath = path.join(filePath0, file);
+                            const isDirectory = fs.statSync(miniPath).isDirectory();
+                            logger.info(`    - ${file} ${isDirectory ? '(directory)' : '(file)'}`);
+                        });
+
+                        analyzeFile(filePath0, res);
+
+                    // if there are subdirectories that are not Minidump return 400
+                    } else if (hasSubdirectories) {
+                        logger.warn('Archive contains invalid subdirectories');
+                        res.status(400).send('Uploaded archive contains invalid subdirectories. .dmps must be loose files inside the single archive or in a Minidump directory');
                         deleteFile(filePath);
+
+                    // If more than 10 files in an archive return 400
                     } else if (files.length > 10) {
                         logger.warn('Archive contains more than 10 files');
                         res.status(400).send('Uploaded archive contains more than 10 files');
                         deleteFile(filePath);
+                    
+                    // If no subdirectories validate the files then analyze
                     } else {
-                        const invalidFiles = files.filter(file => !checkFileHeader(path.join(filePath, file.name)));
-                        if (invalidFiles.length > 0) {
-                            logger.warn('Archive contains unsupported file types');
-                            res.status(400).send('Uploaded archive contains unsupported file types');
-                            deleteFile(filePath);
-                        } else {
+                        const validFiles = files.filter(file => checkFileHeader(path.join(filePath, file.name)));
+                        if (validFiles.length > 0) {
                             analyzeFile(filePath, res);
+                        } else {
+                            logger.warn('Archive only contains unsupported file types');
+                            res.status(400).send('Uploaded archive only contains unsupported file types');
+                            deleteFile(filePath);
                         }
                     }
                 });
