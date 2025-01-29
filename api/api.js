@@ -223,8 +223,8 @@ const handleAnalyzeDmp = async (req, res) => {
                         const filesInMinidump = fs.readdirSync(filePath0);
                         logger.info('Files in the Minidump directory:');
                         filesInMinidump.forEach(file => {
-                            const filePath = path.join(filePath0, file);
-                            const isDirectory = fs.statSync(filePath).isDirectory();
+                            const miniPath = path.join(filePath0, file);
+                            const isDirectory = fs.statSync(miniPath).isDirectory();
                             logger.info(`    - ${file} ${isDirectory ? '(directory)' : '(file)'}`);
                         });
 
