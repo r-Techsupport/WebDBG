@@ -202,10 +202,22 @@ const handleAnalyzeDmp = async (req, res) => {
                         deleteFile(filePath);
                         return;
                     }
-                    const hasSubdirectories = files.some(file => file.isDirectory());
-                    if (hasSubdirectories) {
-                        logger.warn('Archive contains subdirectories');
-                        res.status(400).send('Uploaded archive contains subdirectories .dmps must be loose files inside the single archive');
+
+                    // Log files contained in the archive
+                    logger.info('Files in the archive:');
+                    files.forEach(file => {
+                        logger.info(`    - ${file.name} ${file.isDirectory() ? '(directory)' : '(file)'}`);
+                    });
+
+                    const hasSubdirectories = files.some(file => file.isDirectory()); 
+                    const hasMinidumpSubdirectory = files.some(file => file.isDirectory() && file.name === 'Minidump');
+                    if (hasMinidumpSubdirectory) {
+                        logger.info('Archive contains Minidumps directory');
+                        const filePath0 = `${filePath}\\Minidump`;
+                         analyzeFile(filePath0, res);
+                    } else if (hasSubdirectories) {
+                        logger.warn('Archive contains invalid subdirectories');
+                        res.status(400).send('Uploaded archive contains invalid subdirectories. .dmps must be loose files inside the single archive or in a Minidump directory');
                         deleteFile(filePath);
                     } else if (files.length > 10) {
                         logger.warn('Archive contains more than 10 files');
