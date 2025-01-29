@@ -244,13 +244,13 @@ const handleAnalyzeDmp = async (req, res) => {
                     
                     // If no subdirectories validate the files then analyze
                     } else {
-                        const invalidFiles = files.filter(file => !checkFileHeader(path.join(filePath, file.name)));
-                        if (invalidFiles.length > 0) {
-                            logger.warn('Archive contains unsupported file types');
-                            res.status(400).send('Uploaded archive contains unsupported file types');
-                            deleteFile(filePath);
-                        } else {
+                        const validFiles = files.filter(file => checkFileHeader(path.join(filePath, file.name)));
+                        if (validFiles.length > 0) {
                             analyzeFile(filePath, res);
+                        } else {
+                            logger.warn('Archive only contains unsupported file types');
+                            res.status(400).send('Uploaded archive only contains unsupported file types');
+                            deleteFile(filePath);
                         }
                     }
                 });
