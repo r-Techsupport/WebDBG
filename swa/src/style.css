@@ -35,10 +35,11 @@ body {
 }
 
 /* The central part of the page holding results */
-#content {
+.content {
     background-color: var(--b3);
     border-radius: .5em;
     padding: 1em;
+    margin-bottom: 1em;
 }
 
 /* The content for a JSON result */

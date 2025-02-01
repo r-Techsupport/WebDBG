@@ -106,9 +106,9 @@ const FileUpload = () => {
         // No clue what this does, but everything is rendered inside it
         if (Array.isArray(data)) {
             return data.map((item, index) => (
-                <>
+                <div class="content">
                     {renderJsonToHtml(item)}
-                </>
+                </div>
             ));
         }
 
@@ -183,9 +183,9 @@ const FileUpload = () => {
                         </button>
                     </div>
                 </div>
-                <div id="content">
-                {!error && !responseData && <p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p>}
-                {error && <p style={{ color: '#bf616a' }}>{error}</p>}
+                <div>
+                {!error && !responseData && <div class="content"><p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p></div>}
+                {error && <div class="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
                 {responseData && (
                     <>{renderJsonToHtml(JSON.parse(responseData))}</>
                 )}
