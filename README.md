@@ -47,6 +47,12 @@ On a Windows host with Docker installed and using Windows containers execute the
 docker build -t api . ; docker run --rm -it -p 3000:3000 api
 ```
 
+You may need process isolation if you get the error `hcs::CreateComputeSystem \\: The request is not supported.`
+
+```bash
+docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -p 3000:3000 api
+```
+
 Once launched use `REACT_APP_API_URL=http://localhost:3000` in your `.env` and launch your local development SWA.
 
 ### PUT endpoint usage
