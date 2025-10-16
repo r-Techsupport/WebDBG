@@ -36,13 +36,10 @@ const FileUpload = () => {
                 method: 'PUT',
                 body: formData,
             });
-            
             const responseText = await response.text();
-            
             if (!response.ok) {
                 throw new Error(`${responseText}`);
             }
-            
             setResponseData(responseText);
         } catch (error) {
             console.error(error);
@@ -63,13 +60,13 @@ const FileUpload = () => {
             const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`, {
                 method: 'PUT',
             });
-            
+
             const responseText = await response.text();
-            
+
             if (!response.ok) {
                 throw new Error(`${responseText}`);
             }
-            
+
             setResponseData(responseText);
         } catch (error) {
             console.error(error);

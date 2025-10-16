@@ -40,12 +40,12 @@ body {
     border-radius: .5em;
     padding: 1em;
     margin-bottom: 1em;
+    font-family: 'fira code', 'monospace';
 }
 
 /* The content for a JSON result */
 .result-content {
     margin-left: 2em;
-    font-family: monospace;
     white-space: pre-line;
 }
 
