@@ -20,6 +20,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Set CORS headers for all requests
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
+
 const port = process.env.PORT || 3000;
 app.set('trust proxy', true);
 
@@ -63,16 +73,6 @@ const upload = multer({
 // Add security headers to all responses
 app.use(helmet()); // Add security headers to all responses
 
-// Add CORS middleware to allow all origins
-app.use(cors({
-    origin: '*', // Allow all origins
-    methods: ['GET','POST', 'PUT'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Handle preflight requests
-app.options('*', cors());
-
 // Rate limiting middleware to prevent abuse
 const limiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
@@ -108,7 +108,6 @@ const checkFileHeader = (checkPath) => {
     logger.info('File is a DMP with PAGE header');
     return true;
 };
-
 
 // Function to execute analysis commands on local files
 const analyzeFile = async (filePath, res) => {
