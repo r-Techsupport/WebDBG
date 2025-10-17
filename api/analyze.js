@@ -96,7 +96,10 @@ const Analyze = async (target) => {
         const promises = files.map(async (file) => {
             const dmp = path.resolve(target, file);
             const result = await processDmpObject(dmp);
-            return processResult(dmp, result);
+            // Add dmpName only for zip (directory) case
+            const processedResult = processResult(dmp, result);
+            processedResult.dmpName = path.basename(dmp);
+            return processedResult;
         });
         const results = await Promise.all(promises);
         dmpArray.push(...results);

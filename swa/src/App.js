@@ -111,6 +111,7 @@ const FileUpload = () => {
 
         // Define the key order to display in
         const order = [
+            "dmpName",
             "dmpInfo",
             "analysis",
             "post",

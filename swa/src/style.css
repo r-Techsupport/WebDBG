@@ -50,19 +50,11 @@ body {
 }
 
 /* Rename our headers */
-.result-header.analysis::before {
-    content: "Analysis";
+.result-header.dmpName::before {
+    content: "Dump Name";
     visibility: visible;
 }
-.result-header.analysis {
-    visibility: hidden;
-}
-
-.result-header.post::before {
-    content: "Post Processing";
-    visibility: visible;
-}
-.result-header.post {
+.result-header.dmpName {
     visibility: hidden;
 }
 .result-header.dmpInfo::before {
@@ -70,6 +62,20 @@ body {
     visibility: visible;
 }
 .result-header.dmpInfo {
+    visibility: hidden;
+}
+.result-header.analysis::before {
+    content: "Analysis";
+    visibility: visible;
+}
+.result-header.analysis {
+    visibility: hidden;
+}
+.result-header.post::before {
+    content: "Post Processing";
+    visibility: visible;
+}
+.result-header.post {
     visibility: hidden;
 }
 
