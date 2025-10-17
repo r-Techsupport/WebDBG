@@ -168,7 +168,7 @@ const FileUpload = () => {
                 </div>
                 <div class="button-container">
                     <div class="button-div">
-                        <input type="file" onChange={handleFileChange} />
+                        <input type="file" accept=".dmp,.zip" onChange={handleFileChange} />
                         <button onClick={handleFileUpload} disabled={loading}>
                             {loading ? 'Uploading...' : 'Upload File'}
                         </button>
