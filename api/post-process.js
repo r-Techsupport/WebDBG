@@ -17,6 +17,7 @@ const logger = winston.createLogger({
 // Configuration object for bugcheck commands
 const bugcheckCommands = {
     '9f': (parser, dmp, args) => `${parser} -z ${dmp} -c "k; !devstack ${args[1]} ; q"`,
+    '133': (parser, dmp) => `${parser} -z ${dmp} -c "k; !dpcwatchdog ; q"`,
     // Add more bugcheck commands here as needed
     // '<bugcheck>': (dmp, args) => `${parser} -z ${dmp} -c "k; <commands to run> ; q"`,
     // Args can be used in a command ${args[#]}
