@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import winston from 'winston';
 import cors from 'cors';
 import unzipper from 'unzipper';
-import fileType from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 import { readChunkSync } from 'read-chunk';
 import { v4 as uuidv4 } from 'uuid'
 import Analyze from './analyze.js';
@@ -172,15 +172,15 @@ const handleAnalyzeDmp = async (req, res) => {
     }
 
     // Process the files
-    const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
-    const mimeType = fileType(buffer);
+    const buffer = fs.readFileSync(uploadPath);
+    const mimeTypeObj = await fileTypeFromBuffer(buffer);
 
-    // If mimetype returns a valid response check that it is a zip
+    // If mimeTypeObj returns a valid response check that it is a zip
     // otherwise it is not valid and we reject it
-    if (mimeType) { 
-        logger.info(`File type is: ${mimeType.mime}`)
+    if (mimeTypeObj) { 
+        logger.info(`File type is: ${mimeTypeObj.mime}`)
 
-        if (mimeType.mime === 'application/zip') {
+        if (mimeTypeObj.mime === 'application/zip') {
             logger.info(`.zip file uploaded`)
 
             const filePath = `${uploadPath}_dir`
@@ -314,7 +314,7 @@ app.use((err, req, res, next) => {
     }
 
     logger.error(`Unhandled failure: ${err.stack}`);
-    res.status(500).send('Something broke, I lost my 418');
+    res.status(500).send('Something broke, error is 500 but it might as well be 418');
 });
 
 // Start the Express server

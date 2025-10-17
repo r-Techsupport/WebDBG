@@ -11,20 +11,20 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "axios": "^1.4.0",
+    "axios": "^1.12.2",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "express-rate-limit": "^6.7.0",
-    "file-type": "^12.0.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "file-type": "^21.0.0",
     "fs": "^0.0.1-security",
-    "helmet": "^6.1.0",
-    "marked": "^5.0.2",
-    "multer": "^1.4.5-lts.1",
+    "helmet": "^8.1.0",
+    "marked": "^16.4.0",
+    "multer": "^2.0.2",
     "path": "^0.12.7",
     "read-chunk": "^5.0.0",
     "unzipper": "^0.12.3",
-    "uuid": "^11.0.3",
-    "winston": "^3.16.0"
+    "uuid": "^13.0.0",
+    "winston": "^3.18.3"
   }
 }
