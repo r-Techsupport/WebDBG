@@ -74,7 +74,7 @@ app.use(helmet()); // Add security headers to all responses
 
 // Rate limiting middleware to prevent abuse
 const limiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
+    windowMs: 3 * 60 * 1000, // 3 minutes
     max: 10 // limit each IP to 10 requests per windowMs
 });
 app.use(limiter);
