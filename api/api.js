@@ -8,7 +8,6 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
-import cors from 'cors';
 import unzipper from 'unzipper';
 import { fileTypeFromBuffer } from 'file-type';
 import { readChunkSync } from 'read-chunk';
