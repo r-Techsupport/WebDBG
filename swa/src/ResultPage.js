@@ -17,7 +17,7 @@ const isValidJson = (data) => {
 
 const sortJson = (data, order) => {
     return order.reduce((acc, key) => {
-        if (data.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
             acc[key] = data[key];
         }
         return acc;
@@ -38,14 +38,14 @@ const renderJsonToHtml = (data) => {
     const keyValueArray = Object.entries(sortedData).map(([key, value]) => ({ key, value }));
     const specialItems = keyValueArray.filter(item => specialKeys.includes(item.key));
     const regularItems = keyValueArray.filter(item => !specialKeys.includes(item.key));
-    const regularRender = regularItems.map((item, index) => (
+    const regularRender = regularItems.map((item) => (
         <React.Fragment key={item.key}>
             <h2 className={`${item.key} result-header`}>{item.key}</h2>
             <div className="result-content">{item.value}</div>
         </React.Fragment>
     ));
-    const specialRender = specialItems.map((item, index) => (
-        <div key={index} className={item.key}>
+    const specialRender = specialItems.map((item) => (
+        <div key={item.key || item.value || Math.random()} className={item.key}>
             <details>
                 <summary>Raw results</summary>
                 <div className="result-content">{item.value}</div>
