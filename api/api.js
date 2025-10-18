@@ -129,7 +129,7 @@ const analyzeFile = async (filePath, res) => {
 
 // PUT and POST endpoint to receive .dmp file or URL and analyze it
 const handleAnalyzeDmp = async (req, res) => {
-    const uploadName = req.uploadName; // Retrieve the upload name from the request object
+    const uploadName = req.uploadName || uuidv4().split('-')[0]; // Retrieve the upload name from the request object
     const uploadPath = path.join(uploadsDir, `${uploadName}`);
 
     if (req.file) { // If a file is uploaded
