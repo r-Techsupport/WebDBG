@@ -40,11 +40,21 @@ const FileUpload = () => {
                 setError('Error: File too large. The maximum allowed size is 10MB.');
                 return;
             }
-            const responseJson = await response.json();
-            if (!response.ok) {
-                throw new Error(responseJson?.error || 'Upload failed');
+            const text = await response.text();
+            let responseJson = null;
+            try {
+                responseJson = JSON.parse(text);
+            } catch (e) {
+                if (!response.ok) {
+                    setError(text);
+                    return;
+                }
             }
-            if (responseJson.uuid) {
+            if (!response.ok) {
+                setError(responseJson?.error || 'Upload failed');
+                return;
+            }
+            if (responseJson && responseJson.uuid) {
                 navigate(`/${responseJson.uuid}`);
             } else {
                 setError('No UUID returned from API');
@@ -70,11 +80,21 @@ const FileUpload = () => {
                 setError('Error: File too large. The maximum allowed size is 10MB.');
                 return;
             }
-            const responseJson = await response.json();
-            if (!response.ok) {
-                throw new Error(responseJson?.error || 'Upload failed');
+            const text = await response.text();
+            let responseJson = null;
+            try {
+                responseJson = JSON.parse(text);
+            } catch (e) {
+                if (!response.ok) {
+                    setError(text);
+                    return;
+                }
             }
-            if (responseJson.uuid) {
+            if (!response.ok) {
+                setError(responseJson?.error || 'Upload failed');
+                return;
+            }
+            if (responseJson && responseJson.uuid) {
                 navigate(`/${responseJson.uuid}`);
             } else {
                 setError('No UUID returned from API');
