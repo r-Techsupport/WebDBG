@@ -44,16 +44,19 @@ The following Secrets and Variables must be configured under the "Actions" conte
 On a Windows host with Docker installed and using Windows containers execute the following from inside the `api` directory to build and launch the [WinDebug-Container](https://github.com/PipeItToDevNull/WinDebug-Container) based API.
 
 ```bash
-docker build -t api . ; docker run --rm -it -p 3000:3000 api
+docker build -t api . ; docker run --rm -it -e ENABLE_CORS=true -p 3000:3000 api
 ```
 
 You may need process isolation if you get the error `hcs::CreateComputeSystem \\: The request is not supported.`
 
 ```bash
-docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -p 3000:3000 api
+docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -e ENABLE_CORS=true -p 3000:3000 api
 ```
 
 Once launched use `REACT_APP_API_URL=http://localhost:3000` in your `.env` and launch your local development SWA.
+
+### Deployment
+Using an nginx reverse proxy to apply CORS (don't run ENABLE_CORS=true in prod) and SSL is the best method, the nginx default max client upload size of 10MB is fine for this appliction.
 
 ### PUT endpoint usage
 With a file

@@ -20,15 +20,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Set CORS headers for all requests
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    next();
-});
-
 const port = process.env.PORT || 3000;
 app.set('trust proxy', true);
 
@@ -62,6 +53,18 @@ const storage = multer.diskStorage({
         cb(null, uploadName);
     }
 });
+
+// Set CORS headers for all requests when ENABLE_CORS is set
+if (process.env.ENABLE_CORS === 'true') {
+    logger.info('CORS is enabled for all origins');
+    app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        next();
+    });
+}
 
 // Size limit of 10M
 const upload = multer({ 
