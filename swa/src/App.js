@@ -36,6 +36,10 @@ const FileUpload = () => {
                 method: 'PUT',
                 body: formData,
             });
+            if (response.status === 413) {
+                setError('Error: File too large. The maximum allowed size is 10MB.');
+                return;
+            }
             const responseText = await response.text();
             if (!response.ok) {
                 throw new Error(`${responseText}`);
@@ -60,13 +64,14 @@ const FileUpload = () => {
             const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`, {
                 method: 'PUT',
             });
-
+            if (response.status === 413) {
+                setError('Error: File too large. The maximum allowed size is 10MB.');
+                return;
+            }
             const responseText = await response.text();
-
             if (!response.ok) {
                 throw new Error(`${responseText}`);
             }
-
             setResponseData(responseText);
         } catch (error) {
             console.error(error);
