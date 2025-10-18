@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
+// Retrieve the site name and API URL from environment variables
+const SITE_NAME = process.env.REACT_APP_SITE_NAME;
 const API_URL = `${process.env.REACT_APP_API_URL}`;
 
 const isValidJson = (data) => {
@@ -85,8 +88,14 @@ const ResultPage = () => {
     }, [uuid]);
 
     return (
-        <div id="container">
-            <h1>Result for UUID: {uuid}</h1>
+        <div>
+        <Helmet>
+        <title>{SITE_NAME}</title>
+        </Helmet>
+            <div id="container"> 
+                <div id="header">
+                    <h1 id="site_name">{SITE_NAME}</h1>
+                </div>
             {loading && <div className="content"><p>Loading...</p></div>}
             {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
             {responseData && (
@@ -94,6 +103,7 @@ const ResultPage = () => {
                     ? <>{renderJsonToHtml(JSON.parse(responseData))}</>
                     : <div className="content"><p style={{ color: '#bf616a' }}>Error: Invalid JSON received from backend.</p></div>
             )}
+            </div>
         </div>
     );
 };
