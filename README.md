@@ -58,6 +58,12 @@ Once launched use `REACT_APP_API_URL=http://localhost:3000` in your `.env` and l
 ### Deployment
 Using an nginx reverse proxy to apply CORS (don't run ENABLE_CORS=true in prod) and SSL is the best method, the nginx default max client upload size of 10MB is fine for this appliction.
 
+You want to declare a volume for `C:\app\results`, an example command for deployment is below.
+
+```bash
+docker run -d --restart unless-stopped --name webdbg-api -v webdbg-results:C:\app\results -p 3000:3000 ghcr.io/r-techsupport/webdbg-api:latest
+```
+
 ### PUT endpoint usage
 With a file
 ```bash

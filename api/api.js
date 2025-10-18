@@ -335,6 +335,38 @@ app.get('/', (req, res) => {
     });
 });
 
+// Cleanup function to delete result files older than 7 days
+const cleanupOldResults = async () => {
+    const now = Date.now();
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    try {
+        const files = await fs.promises.readdir(resultsDir);
+        let deletedCount = 0;
+        for (const file of files) {
+            if (file.endsWith('.json')) {
+                const filePath = path.join(resultsDir, file);
+                const stat = await fs.promises.stat(filePath);
+                if (now - stat.mtimeMs > weekMs) {
+                    await fs.promises.unlink(filePath);
+                    logger.info(`Deleted old result file: ${filePath}`);
+                    deletedCount++;
+                }
+            }
+        }
+        if (deletedCount === 0) {
+            logger.info('Cleanup ran: no old result files deleted.');
+        }
+    } catch (err) {
+        logger.error(`Cleanup error: ${err.message}`);
+    }
+};
+
+// Cleanup middleware: run after every request
+app.use(async (req, res, next) => {
+    await cleanupOldResults();
+    next();
+});
+
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
