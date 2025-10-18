@@ -188,7 +188,9 @@ const FileUpload = () => {
         </Helmet>
             <div id="container"> 
                 <div id="header">
-                    <h1 id="site_name">{SITE_NAME}</h1>
+                    <h1 id="site_name">
+                        <a href={'/'} style={{ color: 'inherit', textDecoration: 'none' }}>{SITE_NAME}</a>
+                    </h1>
                 </div>
                 <div className="button-container">
                     <div className="button-div">

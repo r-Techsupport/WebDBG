@@ -94,7 +94,9 @@ const ResultPage = () => {
         </Helmet>
             <div id="container"> 
                 <div id="header">
-                    <h1 id="site_name">{SITE_NAME}</h1>
+                    <h1 id="site_name">
+                        <a href={'/'} style={{ color: 'inherit', textDecoration: 'none' }}>{SITE_NAME}</a>
+                    </h1>
                 </div>
             {loading && <div className="content"><p>Loading...</p></div>}
             {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
