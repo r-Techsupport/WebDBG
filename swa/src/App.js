@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import ResultPage from './ResultPage';
 import { Helmet } from 'react-helmet';
 import Footer from './footer';
 
@@ -12,6 +14,7 @@ const FileUpload = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [responseData, setResponseData] = useState('');
+    const navigate = useNavigate();
     
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -23,14 +26,11 @@ const FileUpload = () => {
     
     const handleFileUpload = async () => {
         if (!file) return;
-        
         const formData = new FormData();
         formData.append('dmpFile', file);
-        
         setLoading(true);
         setError('');
         setResponseData('');
-        
         try {
             const response = await fetch(API_URL, {
                 method: 'PUT',
@@ -40,11 +40,15 @@ const FileUpload = () => {
                 setError('Error: File too large. The maximum allowed size is 10MB.');
                 return;
             }
-            const responseText = await response.text();
+            const responseJson = await response.json();
             if (!response.ok) {
-                throw new Error(`${responseText}`);
+                throw new Error(responseJson?.error || 'Upload failed');
             }
-            setResponseData(responseText);
+            if (responseJson.uuid) {
+                navigate(`/${responseJson.uuid}`);
+            } else {
+                setError('No UUID returned from API');
+            }
         } catch (error) {
             console.error(error);
             setError(`Error: ${error.message}`);
@@ -55,11 +59,9 @@ const FileUpload = () => {
     
     const handleUrlSubmit = async () => {
         if (!url) return;
-        
         setLoading(true);
         setError('');
         setResponseData('');
-        
         try {
             const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`, {
                 method: 'PUT',
@@ -68,11 +70,15 @@ const FileUpload = () => {
                 setError('Error: File too large. The maximum allowed size is 10MB.');
                 return;
             }
-            const responseText = await response.text();
+            const responseJson = await response.json();
             if (!response.ok) {
-                throw new Error(`${responseText}`);
+                throw new Error(responseJson?.error || 'Upload failed');
             }
-            setResponseData(responseText);
+            if (responseJson.uuid) {
+                navigate(`/${responseJson.uuid}`);
+            } else {
+                setError('No UUID returned from API');
+            }
         } catch (error) {
             console.error(error);
             setError(`Error: ${error.message}`);
@@ -81,15 +87,7 @@ const FileUpload = () => {
         }
     };
     
-    // Function to validate JSON Response
-    const isValidJson = (data) => {
-        try {
-            JSON.parse(data);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    };
+    // Removed unused isValidJson
     
     // Function to sort JSON keys
     const sortJson = (data, order) => {
@@ -199,4 +197,13 @@ const FileUpload = () => {
     );
 };
 
-export default FileUpload;
+const App = () => (
+    <Router>
+        <Routes>
+            <Route path="/" element={<FileUpload />} />
+            <Route path=":uuid" element={<ResultPage />} />
+        </Routes>
+    </Router>
+);
+
+export default App;

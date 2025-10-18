@@ -42,6 +42,12 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
 
+// Esure the results directory exists
+const resultsDir = path.join(__dirname, 'results');
+if (!fs.existsSync(resultsDir)) {
+    fs.mkdirSync(resultsDir);
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -111,14 +117,21 @@ const checkFileHeader = (checkPath) => {
     return true;
 };
 
-// Function to execute analysis commands on local files
+// Function to execute analysis commands on local files and save result as JSON
 const analyzeFile = async (filePath, res) => {
     logger.info(`Sending target: ${filePath} for analysis`);
 
     try {
         const analysisResult = await Analyze(filePath);
-        logger.info('Analysis output sent to client');
-        res.json(JSON.parse(analysisResult));
+        const resultObj = JSON.parse(analysisResult);
+        // Generate UUID for result
+        const resultId = uuidv4();
+        const resultPath = path.join(resultsDir, `${resultId}.json`);
+        // Save result to file
+        await fs.promises.writeFile(resultPath, JSON.stringify(resultObj, null, 2), 'utf8');
+        logger.info(`Analysis result saved: ${resultPath}`);
+        // Return only the UUID to the client
+        res.json({ uuid: resultId });
     } catch (error) {
         logger.error(`Failed to analyze target: ${error.message}`);
         res.status(500).send("An error occurred while analyzing the file");
@@ -126,6 +139,22 @@ const analyzeFile = async (filePath, res) => {
         await deleteFile(filePath);
     }
 };
+
+// GET endpoint to fetch analysis result by UUID
+app.get('/:uuid', async (req, res) => {
+    const { uuid } = req.params;
+    const resultPath = path.join(resultsDir, `${uuid}.json`);
+    try {
+        if (!fs.existsSync(resultPath)) {
+            return res.status(404).send('Result not found');
+        }
+        const data = await fs.promises.readFile(resultPath, 'utf8');
+        res.type('application/json').send(data);
+    } catch (err) {
+        logger.error(`Failed to fetch result for UUID ${uuid}: ${err.message}`);
+        res.status(500).send('An error occured while retrieving result');
+    }
+});
 
 // PUT and POST endpoint to receive .dmp file or URL and analyze it
 const handleAnalyzeDmp = async (req, res) => {
