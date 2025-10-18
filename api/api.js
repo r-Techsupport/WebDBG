@@ -8,9 +8,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
-import cors from 'cors';
 import unzipper from 'unzipper';
-import fileType from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 import { readChunkSync } from 'read-chunk';
 import { v4 as uuidv4 } from 'uuid'
 import Analyze from './analyze.js';
@@ -20,6 +19,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Set CORS headers for all requests
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
+
 const port = process.env.PORT || 3000;
 app.set('trust proxy', true);
 
@@ -63,19 +72,9 @@ const upload = multer({
 // Add security headers to all responses
 app.use(helmet()); // Add security headers to all responses
 
-// Add CORS middleware to allow all origins
-app.use(cors({
-    origin: '*', // Allow all origins
-    methods: ['GET','POST', 'PUT'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Handle preflight requests
-app.options('*', cors());
-
 // Rate limiting middleware to prevent abuse
 const limiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
+    windowMs: 3 * 60 * 1000, // 3 minutes
     max: 10 // limit each IP to 10 requests per windowMs
 });
 app.use(limiter);
@@ -108,7 +107,6 @@ const checkFileHeader = (checkPath) => {
     logger.info('File is a DMP with PAGE header');
     return true;
 };
-
 
 // Function to execute analysis commands on local files
 const analyzeFile = async (filePath, res) => {
@@ -173,15 +171,15 @@ const handleAnalyzeDmp = async (req, res) => {
     }
 
     // Process the files
-    const buffer = readChunkSync(uploadPath, { length: fileType.minimumBytes, startPosition: 0 });
-    const mimeType = fileType(buffer);
+    const buffer = fs.readFileSync(uploadPath);
+    const mimeTypeObj = await fileTypeFromBuffer(buffer);
 
-    // If mimetype returns a valid response check that it is a zip
+    // If mimeTypeObj returns a valid response check that it is a zip
     // otherwise it is not valid and we reject it
-    if (mimeType) { 
-        logger.info(`File type is: ${mimeType.mime}`)
+    if (mimeTypeObj) { 
+        logger.info(`File type is: ${mimeTypeObj.mime}`)
 
-        if (mimeType.mime === 'application/zip') {
+        if (mimeTypeObj.mime === 'application/zip') {
             logger.info(`.zip file uploaded`)
 
             const filePath = `${uploadPath}_dir`
@@ -315,7 +313,7 @@ app.use((err, req, res, next) => {
     }
 
     logger.error(`Unhandled failure: ${err.stack}`);
-    res.status(500).send('Something broke, I lost my 418');
+    res.status(500).send('Something broke, error is 500 but it might as well be 418');
 });
 
 // Start the Express server

@@ -36,13 +36,10 @@ const FileUpload = () => {
                 method: 'PUT',
                 body: formData,
             });
-            
             const responseText = await response.text();
-            
             if (!response.ok) {
                 throw new Error(`${responseText}`);
             }
-            
             setResponseData(responseText);
         } catch (error) {
             console.error(error);
@@ -63,13 +60,13 @@ const FileUpload = () => {
             const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`, {
                 method: 'PUT',
             });
-            
+
             const responseText = await response.text();
-            
+
             if (!response.ok) {
                 throw new Error(`${responseText}`);
             }
-            
+
             setResponseData(responseText);
         } catch (error) {
             console.error(error);
@@ -114,6 +111,7 @@ const FileUpload = () => {
 
         // Define the key order to display in
         const order = [
+            "dmpName",
             "dmpInfo",
             "analysis",
             "post",
@@ -171,7 +169,7 @@ const FileUpload = () => {
                 </div>
                 <div class="button-container">
                     <div class="button-div">
-                        <input type="file" onChange={handleFileChange} />
+                        <input type="file" accept=".dmp,.zip" onChange={handleFileChange} />
                         <button onClick={handleFileUpload} disabled={loading}>
                             {loading ? 'Uploading...' : 'Upload File'}
                         </button>
