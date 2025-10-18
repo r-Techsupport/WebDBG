@@ -106,7 +106,7 @@ const FileUpload = () => {
         // No clue what this does, but everything is rendered inside it
         if (Array.isArray(data)) {
             return data.map((item, index) => (
-                <div class="content">
+                <div className="content">
                     {renderJsonToHtml(item)}
                 </div>
             ));
@@ -133,10 +133,10 @@ const FileUpload = () => {
         // Render the regular items
         const regularRender = regularItems.map((item, index) => (
             <>
-            <h2 class={`${item.key} result-header`}>
+            <h2 className={`${item.key} result-header`}>
                 {item.key}
             </h2>
-            <div class="result-content">
+            <div className="result-content">
                 {item.value}
             </div>
             </>
@@ -147,7 +147,7 @@ const FileUpload = () => {
             <div key={index} className={item.key}>
             <details>
                 <summary>Raw results</summary>
-                <div class="result-content">{item.value}</div>
+                <div className="result-content">{item.value}</div>
             </details>
             </div>
         ));
@@ -170,14 +170,14 @@ const FileUpload = () => {
                 <div id="header">
                     <h1 id="site_name">{SITE_NAME}</h1>
                 </div>
-                <div class="button-container">
-                    <div class="button-div">
+                <div className="button-container">
+                    <div className="button-div">
                         <input type="file" accept=".dmp,.zip" onChange={handleFileChange} />
                         <button onClick={handleFileUpload} disabled={loading}>
                             {loading ? 'Uploading...' : 'Upload File'}
                         </button>
                     </div>
-                    <div class="button-div">
+                    <div className="button-div">
                         <input type="text" value={url} onChange={handleUrlChange} placeholder="Enter URL" />
                         <button onClick={handleUrlSubmit} disabled={loading}>
                             {loading ? 'Submitting...' : 'Upload URL'}
@@ -185,8 +185,8 @@ const FileUpload = () => {
                     </div>
                 </div>
                 <div>
-                {!error && !responseData && <div class="content"><p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p></div>}
-                {error && <div class="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
+                {!error && !responseData && <div className="content"><p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p></div>}
+                {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
                 {responseData && (
                     <>{renderJsonToHtml(JSON.parse(responseData))}</>
                 )}
