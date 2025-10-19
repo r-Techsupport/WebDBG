@@ -125,11 +125,15 @@ const FileUpload = () => {
 
         // No clue what this does, but everything is rendered inside it
         if (Array.isArray(data)) {
-            return data.map((item, index) => (
-                <div className="content">
-                    {renderJsonToHtml(item)}
-                </div>
-            ));
+            return data.map((item) => {
+                // Use a stable key: stringified item or item.key if available
+                let key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
+                return (
+                    <div className="content" key={key}>
+                        {renderJsonToHtml(item)}
+                    </div>
+                );
+            });
         }
 
         // Define the key order to display in
@@ -152,23 +156,23 @@ const FileUpload = () => {
         
         // Render the regular items
         const regularRender = regularItems.map((item, index) => (
-            <>
-            <h2 className={`${item.key} result-header`}>
-                {item.key}
-            </h2>
-            <div className="result-content">
-                {item.value}
-            </div>
-            </>
+            <React.Fragment key={item.key}>
+                <h2 className={`${item.key} result-header`}>
+                    {item.key}
+                </h2>
+                <div className="result-content">
+                    {item.value}
+                </div>
+            </React.Fragment>
         ));
         
         // Render the special items with their own method
         const specialRender = specialItems.map((item, index) => (
-            <div key={index} className={item.key}>
-            <details>
-                <summary>Raw results</summary>
-                <div className="result-content">{item.value}</div>
-            </details>
+            <div key={item.key || item.value || Math.random()} className={item.key}>
+                <details>
+                    <summary>Raw results</summary>
+                    <div className="result-content">{item.value}</div>
+                </details>
             </div>
         ));
         

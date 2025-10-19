@@ -26,11 +26,15 @@ const sortJson = (data, order) => {
 
 const renderJsonToHtml = (data) => {
     if (Array.isArray(data)) {
-        return data.map((item, index) => (
-            <div className="content" key={index}>
-                {renderJsonToHtml(item)}
-            </div>
-        ));
+        return data.map((item) => {
+            // Use a stable key: item.key if available, otherwise stringified item
+            let key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
+            return (
+                <div className="content" key={key}>
+                    {renderJsonToHtml(item)}
+                </div>
+            );
+        });
     }
     const order = ["dmpName", "dmpInfo", "analysis", "post", "rawContent"];
     const specialKeys = ["rawContent"];
