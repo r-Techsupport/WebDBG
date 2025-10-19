@@ -124,8 +124,8 @@ const analyzeFile = async (filePath, res) => {
     try {
         const analysisResult = await Analyze(filePath);
         const resultObj = JSON.parse(analysisResult);
-        // Generate UUID for result
-        const resultId = uuidv4();
+        // Generate short result ID (first octet of UUID)
+        const resultId = uuidv4().split('-')[0];
         const resultPath = path.join(resultsDir, `${resultId}.json`);
         // Save result to file
         await fs.promises.writeFile(resultPath, JSON.stringify(resultObj, null, 2), 'utf8');
@@ -144,11 +144,14 @@ const analyzeFile = async (filePath, res) => {
 app.get('/:uuid', async (req, res) => {
     const { uuid } = req.params;
     const resultPath = path.join(resultsDir, `${uuid}.json`);
+    logger.info(`Result requested: ${resultPath}`);
     try {
         if (!fs.existsSync(resultPath)) {
+            logger.info(`Result not found: ${resultPath}`);
             return res.status(404).send('Result not found');
         }
         const data = await fs.promises.readFile(resultPath, 'utf8');
+        logger.info(`Result served: ${resultPath}`);
         res.type('application/json').send(data);
     } catch (err) {
         logger.error(`Failed to fetch result for UUID ${uuid}: ${err.message}`);
