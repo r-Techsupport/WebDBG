@@ -15,5 +15,5 @@ curl -X PUT http://localhost:3000/analyze-dmp -F "url=http://example.com/file.dm
 
 Retrieve result JSON
 ```bash
-curl -X GET http://chakotay.dev0.sh:3001/<uuid>
+curl -X GET http://localhost:3000/<uuid>
 ```
