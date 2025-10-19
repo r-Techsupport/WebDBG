@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import ResultPage from './ResultPage';
 import { Helmet } from 'react-helmet';
 import Footer from './footer';
 
@@ -12,6 +14,7 @@ const FileUpload = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [responseData, setResponseData] = useState('');
+    const navigate = useNavigate();
     
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -23,14 +26,11 @@ const FileUpload = () => {
     
     const handleFileUpload = async () => {
         if (!file) return;
-        
         const formData = new FormData();
         formData.append('dmpFile', file);
-        
         setLoading(true);
         setError('');
         setResponseData('');
-        
         try {
             const response = await fetch(API_URL, {
                 method: 'PUT',
@@ -40,11 +40,25 @@ const FileUpload = () => {
                 setError('Error: File too large. The maximum allowed size is 10MB.');
                 return;
             }
-            const responseText = await response.text();
-            if (!response.ok) {
-                throw new Error(`${responseText}`);
+            const text = await response.text();
+            let responseJson = null;
+            try {
+                responseJson = JSON.parse(text);
+            } catch (e) {
+                if (!response.ok) {
+                    setError(text);
+                    return;
+                }
             }
-            setResponseData(responseText);
+            if (!response.ok) {
+                setError(responseJson?.error || 'Upload failed');
+                return;
+            }
+            if (responseJson && responseJson.uuid) {
+                navigate(`/${responseJson.uuid}`);
+            } else {
+                setError('No UUID returned from API');
+            }
         } catch (error) {
             console.error(error);
             setError(`Error: ${error.message}`);
@@ -55,11 +69,9 @@ const FileUpload = () => {
     
     const handleUrlSubmit = async () => {
         if (!url) return;
-        
         setLoading(true);
         setError('');
         setResponseData('');
-        
         try {
             const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`, {
                 method: 'PUT',
@@ -68,11 +80,25 @@ const FileUpload = () => {
                 setError('Error: File too large. The maximum allowed size is 10MB.');
                 return;
             }
-            const responseText = await response.text();
-            if (!response.ok) {
-                throw new Error(`${responseText}`);
+            const text = await response.text();
+            let responseJson = null;
+            try {
+                responseJson = JSON.parse(text);
+            } catch (e) {
+                if (!response.ok) {
+                    setError(text);
+                    return;
+                }
             }
-            setResponseData(responseText);
+            if (!response.ok) {
+                setError(responseJson?.error || 'Upload failed');
+                return;
+            }
+            if (responseJson && responseJson.uuid) {
+                navigate(`/${responseJson.uuid}`);
+            } else {
+                setError('No UUID returned from API');
+            }
         } catch (error) {
             console.error(error);
             setError(`Error: ${error.message}`);
@@ -81,15 +107,7 @@ const FileUpload = () => {
         }
     };
     
-    // Function to validate JSON Response
-    const isValidJson = (data) => {
-        try {
-            JSON.parse(data);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    };
+    // Removed unused isValidJson
     
     // Function to sort JSON keys
     const sortJson = (data, order) => {
@@ -107,11 +125,15 @@ const FileUpload = () => {
 
         // No clue what this does, but everything is rendered inside it
         if (Array.isArray(data)) {
-            return data.map((item, index) => (
-                <div class="content">
-                    {renderJsonToHtml(item)}
-                </div>
-            ));
+            return data.map((item) => {
+                // Use a stable key: stringified item or item.key if available
+                const key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
+                return (
+                    <div className="content" key={key}>
+                        {renderJsonToHtml(item)}
+                    </div>
+                );
+            });
         }
 
         // Define the key order to display in
@@ -133,24 +155,24 @@ const FileUpload = () => {
         const regularItems = keyValueArray.filter(item => !specialKeys.includes(item.key));
         
         // Render the regular items
-        const regularRender = regularItems.map((item, index) => (
-            <>
-            <h2 class={`${item.key} result-header`}>
-                {item.key}
-            </h2>
-            <div class="result-content">
-                {item.value}
-            </div>
-            </>
+        const regularRender = regularItems.map((item) => (
+            <React.Fragment key={item.key}>
+                <h2 className={`${item.key} result-header`}>
+                    {item.key}
+                </h2>
+                <div className="result-content">
+                    {item.value}
+                </div>
+            </React.Fragment>
         ));
         
         // Render the special items with their own method
-        const specialRender = specialItems.map((item, index) => (
-            <div key={index} className={item.key}>
-            <details>
-                <summary>Raw results</summary>
-                <div class="result-content">{item.value}</div>
-            </details>
+        const specialRender = specialItems.map((item) => (
+            <div key={item.key || item.value || Math.random()} className={item.key}>
+                <details>
+                    <summary>Raw results</summary>
+                    <div className="result-content">{item.value}</div>
+                </details>
             </div>
         ));
         
@@ -170,16 +192,18 @@ const FileUpload = () => {
         </Helmet>
             <div id="container"> 
                 <div id="header">
-                    <h1 id="site_name">{SITE_NAME}</h1>
+                    <h1 id="site_name">
+                        <a href={'/'} style={{ color: 'inherit', textDecoration: 'none' }}>{SITE_NAME}</a>
+                    </h1>
                 </div>
-                <div class="button-container">
-                    <div class="button-div">
+                <div className="button-container">
+                    <div className="button-div">
                         <input type="file" accept=".dmp,.zip" onChange={handleFileChange} />
                         <button onClick={handleFileUpload} disabled={loading}>
                             {loading ? 'Uploading...' : 'Upload File'}
                         </button>
                     </div>
-                    <div class="button-div">
+                    <div className="button-div">
                         <input type="text" value={url} onChange={handleUrlChange} placeholder="Enter URL" />
                         <button onClick={handleUrlSubmit} disabled={loading}>
                             {loading ? 'Submitting...' : 'Upload URL'}
@@ -187,8 +211,8 @@ const FileUpload = () => {
                     </div>
                 </div>
                 <div>
-                {!error && !responseData && <div class="content"><p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p></div>}
-                {error && <div class="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
+                {!error && !responseData && <div className="content"><p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p></div>}
+                {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
                 {responseData && (
                     <>{renderJsonToHtml(JSON.parse(responseData))}</>
                 )}
@@ -199,4 +223,13 @@ const FileUpload = () => {
     );
 };
 
-export default FileUpload;
+const App = () => (
+    <Router>
+        <Routes>
+            <Route path="/" element={<FileUpload />} />
+            <Route path=":uuid" element={<ResultPage />} />
+        </Routes>
+    </Router>
+);
+
+export default App;

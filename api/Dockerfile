@@ -16,6 +16,9 @@ COPY . .
 # Install application dependencies
 RUN npm install
 
+# Declare a volume for results so they persist
+VOLUME C:\\app\\results
+
 # Expose the application port
 EXPOSE 3000
 
