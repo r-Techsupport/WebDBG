@@ -28,7 +28,7 @@ const renderJsonToHtml = (data) => {
     if (Array.isArray(data)) {
         return data.map((item) => {
             // Use a stable key: item.key if available, otherwise stringified item
-            let key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
+            const key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
             return (
                 <div className="content" key={key}>
                     {renderJsonToHtml(item)}
