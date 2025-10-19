@@ -155,7 +155,7 @@ const FileUpload = () => {
         const regularItems = keyValueArray.filter(item => !specialKeys.includes(item.key));
         
         // Render the regular items
-        const regularRender = regularItems.map((item, index) => (
+        const regularRender = regularItems.map((item) => (
             <React.Fragment key={item.key}>
                 <h2 className={`${item.key} result-header`}>
                     {item.key}
@@ -167,7 +167,7 @@ const FileUpload = () => {
         ));
         
         // Render the special items with their own method
-        const specialRender = specialItems.map((item, index) => (
+        const specialRender = specialItems.map((item) => (
             <div key={item.key || item.value || Math.random()} className={item.key}>
                 <details>
                     <summary>Raw results</summary>
