@@ -64,6 +64,26 @@ const renderJsonToHtml = (data) => {
     );
 };
 
+// New helper: recursively collect "bugchecks" or "bugcheck" values (arrays or strings)
+const collectBugchecks = (node, collector = []) => {
+    if (Array.isArray(node)) {
+        node.forEach(item => collectBugchecks(item, collector));
+        return collector;
+    }
+    if (node && typeof node === 'object') {
+        // support both "bugchecks" (plural) and "bugcheck" (singular)
+        ['bugchecks', 'bugcheck'].forEach((key) => {
+            if (Object.prototype.hasOwnProperty.call(node, key)) {
+                const v = node[key];
+                if (Array.isArray(v)) collector.push(...v.map(String));
+                else if (v != null) collector.push(String(v));
+            }
+        });
+        Object.values(node).forEach(v => collectBugchecks(v, collector));
+    }
+    return collector;
+};
+
 const ResultPage = () => {
     const { uuid } = useParams();
     const [loading, setLoading] = useState(true);
@@ -106,7 +126,38 @@ const ResultPage = () => {
             {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
             {responseData && (
                 isValidJson(responseData)
-                    ? <>{renderJsonToHtml(JSON.parse(responseData))}</>
+                    ? (() => {
+                        const parsed = JSON.parse(responseData);
+                        // If we have multiple results (array with length > 1), build a summary block
+                        if (Array.isArray(parsed) && parsed.length > 1) {
+                            const all = collectBugchecks(parsed);
+                            const counts = all.reduce((acc, name) => {
+                                acc[name] = (acc[name] || 0) + 1;
+                                return acc;
+                            }, {});
+                            return (
+                                <>
+                                    <div className="content summary-block">
+                                        <h2>Summary</h2>
+                                        {Object.keys(counts).length === 0 ? (
+                                            <p>No bugchecks found.</p>
+                                        ) : (
+                                            <ul>
+                                                {Object.entries(counts).map(([name, cnt]) => (
+                                                    <li key={name}>{name} — {cnt}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                    <div className="content">
+                                        {renderJsonToHtml(parsed)}
+                                    </div>
+                                </>
+                            );
+                        }
+                        // single result or not an array -> normal render
+                        return <>{renderJsonToHtml(parsed)}</>;
+                    })()
                     : <div className="content"><p style={{ color: '#bf616a' }}>Error: Invalid JSON received from backend.</p></div>
             )}
             </div>
