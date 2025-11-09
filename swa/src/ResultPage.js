@@ -64,21 +64,20 @@ const renderJsonToHtml = (data) => {
     );
 };
 
-// New helper: recursively collect "bugchecks" or "bugcheck" values (arrays or strings)
+// Collect human readable bugcheck names from the result object to display a summary
 const collectBugchecks = (node, collector = []) => {
     if (Array.isArray(node)) {
         node.forEach(item => collectBugchecks(item, collector));
         return collector;
     }
     if (node && typeof node === 'object') {
-        // support both "bugchecks" (plural) and "bugcheck" (singular)
-        ['bugchecks', 'bugcheck'].forEach((key) => {
-            if (Object.prototype.hasOwnProperty.call(node, key)) {
-                const v = node[key];
-                if (Array.isArray(v)) collector.push(...v.map(String));
-                else if (v != null) collector.push(String(v));
+        if (Object.prototype.hasOwnProperty.call(node, 'bugcheckHuman')) {
+            const human = node.bugcheckHuman;
+            if (human != null) {
+                const s = String(human).trim();
+                if (s) collector.push(s);
             }
-        });
+        }
         Object.values(node).forEach(v => collectBugchecks(v, collector));
     }
     return collector;
@@ -144,7 +143,7 @@ const ResultPage = () => {
                                         ) : (
                                             <ul>
                                                 {Object.entries(counts).map(([name, cnt]) => (
-                                                    <li key={name}>{name} — {cnt}</li>
+                                                    <li key={name}>{name} x {cnt}</li>
                                                 ))}
                                             </ul>
                                         )}

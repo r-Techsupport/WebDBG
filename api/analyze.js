@@ -60,13 +60,25 @@ const processResult = (dmp, rawContent) => {
     const analysisLines = infos[1].split('\n').filter(line => !line.includes('*') && !line.includes("Debugging Details:"));
     const analysis = analysisLines.join('\n').trim();
 
-    // Extracting bugcheck and arguments
-    const bugcheckMatch = analysis.match(/\(([^)]+)\)/);
-    const bugcheck = bugcheckMatch ? bugcheckMatch[1] : null;
+    // Extract human name and code, e.g. "MEMORY_MANAGEMENT (1a)"
+    // bugcheckHuman => "MEMORY_MANAGEMENT", bugcheck => "1a"
+    let bugcheckHuman = null;
+    let bugcheck = null;
+    const bcMatch = analysis.match(/^\s*([A-Za-z0-9 _-]+?)\s*\(\s*([0-9A-Fa-fx]+)\s*\)/m);
+    if (bcMatch) {
+        bugcheckHuman = bcMatch[1].trim();
+        bugcheck = bcMatch[2].trim();
+    } else {
+        // fallback: capture any code-like value in parentheses
+        const bugcheckOnlyMatch = analysis.match(/\(([0-9A-Fa-fx]+)\)/);
+        if (bugcheckOnlyMatch) bugcheck = bugcheckOnlyMatch[1].trim();
+    }
 
-    const argMatches = analysis.match(/Arg\d: ([0-9a-fA-Fx]+)/g);
-    const args = argMatches ? argMatches.map(arg => arg.split(': ')[1]) : [];
-    logger.info(`Bugcheck: ${bugcheck}, Args: ${args}`);
+    // Arguments like: Arg1: 00000000...
+    const argMatches = analysis.match(/Arg\d:\s*([0-9a-fA-Fx]+)/g);
+    const args = argMatches ? argMatches.map(arg => arg.split(':')[1].trim()) : [];
+
+    logger.info(`Bugcheck: ${bugcheck} (${bugcheckHuman || 'unknown'}), Args: ${args}`);
 
     // Output object creation
     const output = {
@@ -74,6 +86,7 @@ const processResult = (dmp, rawContent) => {
         dmpInfo: dmpInfo,
         analysis: analysis,
         bugcheck: bugcheck,
+        bugcheckHuman: bugcheckHuman,
         args: args,
         rawContent: rawContent
     };
