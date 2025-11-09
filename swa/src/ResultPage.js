@@ -137,7 +137,7 @@ const ResultPage = () => {
                             }, {});
                             return (
                                 <>
-                                    <div className="content summary-block">
+                                    <div className="content summary">
                                         <h2>Summary</h2>
                                         {Object.keys(counts).length === 0 ? (
                                             <p>No bugchecks found.</p>
@@ -149,9 +149,7 @@ const ResultPage = () => {
                                             </ul>
                                         )}
                                     </div>
-                                    <div className="content">
                                         {renderJsonToHtml(parsed)}
-                                    </div>
                                 </>
                             );
                         }
