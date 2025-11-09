@@ -1,5 +1,8 @@
 import { exec } from 'child_process';
 import winston from 'winston';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -14,15 +17,26 @@ const logger = winston.createLogger({
     ]
 });
 
-// Configuration object for bugcheck commands
-const bugcheckCommands = {
-    '9f': (parser, dmp, args) => `${parser} -z ${dmp} -c "k; !devstack ${args[1]} ; q"`,
-    '133': (parser, dmp) => `${parser} -z ${dmp} -c "k; !dpcwatchdog ; q"`,
-    // Add more bugcheck commands here as needed
-    // '<bugcheck>': (dmp, args) => `${parser} -z ${dmp} -c "k; <commands to run> ; q"`,
-    // Args can be used in a command ${args[#]}
-    // Arg counts start at 0 so "Arg1" is ${args[0]}
-};
+const bugcheckCommands = {};
+const processorsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'post-processors');
+
+try {
+    const files = fs.readdirSync(processorsDir).filter(f => f.endsWith('.js'));
+    for (const file of files) {
+        const name = path.basename(file, '.js');
+        const filePath = path.join(processorsDir, file);
+        try {
+            // eslint-disable-next-line no-await-in-loop
+            const mod = await import(pathToFileURL(filePath).href);
+            bugcheckCommands[name] = mod.default;
+            logger.info(`Loaded post-processor: ${name} -> ${filePath}`);
+        } catch (err) {
+            logger.error(`Failed to load post-processor ${filePath}: ${err.stack || err}`);
+        }
+    }
+} catch (err) {
+    logger.error(`Unable to read post-processors directory "${processorsDir}": ${err.stack || err}`);
+}
 
 // Function to execute a command and return a promise
 const executeCommand = (command) => {
@@ -42,8 +56,9 @@ const executeCommand = (command) => {
 // Function to perform additional operations on the analysis results
 const postProcessResults = async (results, parser) => {
     for (const result of results) {
-        const commandGenerator = bugcheckCommands[result.bugcheck];
+        const commandGenerator = bugcheckCommands[String(result.bugcheck || '').toLowerCase()];
         if (commandGenerator) {
+            // commandGenerator expected signature: (parser, dmp, args) => string
             const command = commandGenerator(parser, result.dmp, result.args);
             logger.info(`Executing command: ${command}`);
             try {
@@ -55,7 +70,7 @@ const postProcessResults = async (results, parser) => {
                 logger.error(`An error occured while post-processing the file: ${error}`);
             }
         } else {
-            result.post = "No post processing configured for this bugcheck" // Add a null post key if no command is run
+            result.post = "No post processing configured for this bugcheck";
             logger.info(`No command for bugcheck: ${result.bugcheck}`);
         }
     }
