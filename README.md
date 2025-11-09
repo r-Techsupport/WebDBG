@@ -43,9 +43,10 @@ The following Secrets and Variables must be configured under the "Actions" conte
 ### Variables
 
 ```
-ENABLE_CORS
-RATE_LIMIT_S
-FILE_SIZE_MB
+ENABLE_CORS \\ Default is false, set to true when testing otherwise you will get CORS failures. In prod this should be handled by your proxy
+RATE_LIMIT_S \\ The duration of your rate limit expressed in seconds
+RATE_LIMIT_MAX \\ How many requests a client can make in RATE_LIMIT_S before being blocked
+FILE_SIZE_MB \\ How large of a file can be processed. This same size should be configured on your proxy for a more reliable failure.
 ```
 
 ### Local development
