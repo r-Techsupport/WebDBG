@@ -40,6 +40,14 @@ The following Secrets and Variables must be configured under the "Actions" conte
 - REACT_APP_SITE_NAME
 
 ## API
+### Variables
+
+```
+ENABLE_CORS
+RATE_LIMIT_S
+FILE_SIZE_MB
+```
+
 ### Local development
 On a Windows host with Docker installed and using Windows containers execute the following from inside the `api` directory to build and launch the [WinDebug-Container](https://github.com/PipeItToDevNull/WinDebug-Container) based API.
 
