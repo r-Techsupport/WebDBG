@@ -29,9 +29,9 @@ const renderJsonToHtml = (data) => {
     if (Array.isArray(data)) {
         return data.map((item, idx) => {
             const key = (item && typeof item === 'object' && (item.key || item.dmpName)) ? (item.key || item.dmpName) : `item-${idx}`;
-            const title = (item && item.bugcheckHuman) ? item.bugcheckHuman : `Item #${idx + 1}`;
+            const title = (item && item.bugcheckHuman && item.dmpName) ? item.bugcheckHuman + " (" + item.dmpName + ")" : `Item #${idx + 1}`;
             return (
-                <details key={key} className="content result-collapsible" open>
+                <details key={key} className="content result-collapsible">
                     <summary className="content-title">{title}</summary>
                     <div className="content-body">
                         {renderJsonToHtml(item)}
