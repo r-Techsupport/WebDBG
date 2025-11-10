@@ -79,7 +79,7 @@ With a file
 curl.exe -X PUT http://localhost:3000/analyze-dmp -F "dmpFile=@path/to/test.dmp"
 ```
 
-With a URL
+With a URL, if you have special characters in your URL like `&` you will need to encode it before submitting.
 ```bash
 curl -X PUT http://localhost:3000/analyze-dmp -F "url=http://example.com/file.dmp"
 ```
