@@ -59,18 +59,18 @@ docker build -t api . ; docker run --rm -it -e ENABLE_CORS=true -e FILE_SIZE_MB=
 You may need process isolation if you get the error `hcs::CreateComputeSystem \\: The request is not supported.`
 
 ```bash
-docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -e ENABLE_CORS=true -e FILE_SIZE_MB=15 -e RATE_LIMIT_S=60 -e RATE_LIMIT_MAX=10 -p 3001:3000 api
+docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -e ENABLE_CORS=true -p 3001:3000 api
 ```
 
 Once launched use `REACT_APP_API_URL=http://localhost:3001` in your `.env` and launch your local development SWA.
 
 ### Deployment
-Using an nginx reverse proxy to apply CORS (don't run ENABLE_CORS=true in prod) and SSL is the best method, the nginx default max client upload size of 10MB is fine for this appliction.
+Using an nginx reverse proxy to apply CORS and SSL is the best method, the nginx default max client upload size of 10MB is fine for this appliction.
 
 You want to declare a volume for `C:\app\results`, an example command for deployment is below.
 
 ```bash
-docker run -d --restart unless-stopped --name webdbg-api -v webdbg-results:C:\app\results -p 3000:3000 ghcr.io/r-techsupport/webdbg-api:latest
+docker run -d --restart unless-stopped --name webdbg-api -v webdbg-results:C:\app\results -e FILE_SIZE_MB=10 -e RATE_LIMIT_S=60 -e RATE_LIMIT_MAX=5 -p 3000:3000 ghcr.io/r-techsupport/webdbg-api:latest
 ```
 
 ### PUT endpoint usage
