@@ -62,7 +62,7 @@ You may need process isolation if you get the error `hcs::CreateComputeSystem \\
 docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -e ENABLE_CORS=true -e FILE_SIZE_MB=15 -e RATE_LIMIT_S=60 -e RATE_LIMIT_MAX=10 -p 3001:3000 api
 ```
 
-Once launched use `REACT_APP_API_URL=http://localhost:3000` in your `.env` and launch your local development SWA.
+Once launched use `REACT_APP_API_URL=http://localhost:3001` in your `.env` and launch your local development SWA.
 
 ### Deployment
 Using an nginx reverse proxy to apply CORS (don't run ENABLE_CORS=true in prod) and SSL is the best method, the nginx default max client upload size of 10MB is fine for this appliction.
