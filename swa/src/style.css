@@ -82,6 +82,13 @@ body {
 .result-header.post {
     visibility: hidden;
 }
+.result-header.rawContent::before {
+    content: "Raw Content";
+    visibility: visible;
+}
+.result-header.rawContent {
+    visibility: hidden;
+}
 
 /* used for upload items */
 .button-container {
