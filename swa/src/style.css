@@ -34,6 +34,10 @@ body {
     margin-right: 10%;
 }
 
+.content-title {
+    font-size: 1.2em;
+}
+
 /* The central part of the page holding results */
 .content {
     background-color: var(--b3);

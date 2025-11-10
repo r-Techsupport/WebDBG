@@ -25,41 +25,46 @@ const sortJson = (data, order) => {
 };
 
 const renderJsonToHtml = (data) => {
+    // Top-level array: make each item its own collapsible details block (main title only)
     if (Array.isArray(data)) {
-        return data.map((item) => {
-            // Use a stable key: item.key if available, otherwise stringified item
-            const key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
+        return data.map((item, idx) => {
+            const key = (item && typeof item === 'object' && (item.key || item.dmpName)) ? (item.key || item.dmpName) : `item-${idx}`;
+            const title = (item && item.bugcheckHuman) ? item.bugcheckHuman : `Item #${idx + 1}`;
             return (
-                <div className="content" key={key}>
-                    {renderJsonToHtml(item)}
-                </div>
+                <details key={key} className="content result-collapsible" open>
+                    <summary className="content-title">{title}</summary>
+                    <div className="content-body">
+                        {renderJsonToHtml(item)}
+                    </div>
+                </details>
             );
         });
     }
-    const order = ["dmpName", "dmpInfo", "analysis", "post", "rawContent"];
+
+    // Object: render each key as a static section inside the main collapsible block.
+    const order = ["dmpInfo", "analysis", "post", "rawContent"];
     const specialKeys = ["rawContent"];
     const sortedData = sortJson(data, order);
-    const keyValueArray = Object.entries(sortedData).map(([key, value]) => ({ key, value }));
-    const specialItems = keyValueArray.filter(item => specialKeys.includes(item.key));
-    const regularItems = keyValueArray.filter(item => !specialKeys.includes(item.key));
-    const regularRender = regularItems.map((item) => (
-        <React.Fragment key={item.key}>
-            <h2 className={`${item.key} result-header`}>{item.key}</h2>
-            <div className="result-content">{item.value}</div>
-        </React.Fragment>
-    ));
-    const specialRender = specialItems.map((item) => (
-        <div key={item.key || item.value || Math.random()} className={item.key}>
-            <details>
-                <summary>Raw results</summary>
-                <div className="result-content">{item.value}</div>
-            </details>
-        </div>
-    ));
+    const keyValueArray = Object.entries(sortedData);
+
     return (
         <>
-            {regularRender}
-            {specialRender}
+            {keyValueArray.map(([key, value]) => {
+                const isRaw = specialKeys.includes(key);
+                return (
+                    <div key={key} className="content-section" style={{ marginBottom: 12 }}>
+                        <h2 className={`${key} result-header`}>{key}</h2>
+                        <div className="result-content">
+                            {isRaw
+                                ? <pre style={{ whiteSpace: 'pre-wrap' }}>{String(value)}</pre>
+                                : (value && typeof value === 'object')
+                                    ? renderJsonToHtml(value)
+                                    : <div className={`result-${key}`}>{String(value)}</div>
+                            }
+                        </div>
+                    </div>
+                );
+            })}
         </>
     );
 };
