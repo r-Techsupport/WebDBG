@@ -102,6 +102,32 @@ const ResultPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [responseData, setResponseData] = useState('');
+    const [copied, setCopied] = useState(false);
+
+    const handleShare = async () => {
+        const url = window.location.href;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(url);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2200);
+        } catch (err) {
+            console.error('Copy failed', err);
+            setError('Failed to copy URL to clipboard');
+            setTimeout(() => setError(''), 3000);
+        }
+    };
 
     useEffect(() => {
         const fetchResult = async () => {
@@ -134,6 +160,13 @@ const ResultPage = () => {
                     <h1 id="site_name">
                         <a href={'/'} style={{ color: 'inherit', textDecoration: 'none' }}>{SITE_NAME}</a>
                     </h1>
+                </div>
+                <div className="button-container">
+                    <div className="button-div">
+                        <button onClick={handleShare} disabled={copied}>
+                            {copied ? 'URL copied to clipboard!' : 'Copy URL to clipboard'}
+                        </button>
+                    </div>
                 </div>
             {loading && <div className="content"><p>Loading...</p></div>}
             {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
