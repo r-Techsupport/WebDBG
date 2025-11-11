@@ -24,6 +24,15 @@ const sortJson = (data, order) => {
     }, {});
 };
 
+// Map JSON keys to user-friendly labels
+const headerLabels = {
+    dmpName: 'Dump Name',
+    dmpInfo: 'Dump Info',
+    analysis: 'Analysis',
+    post: 'Post Processing',
+    rawContent: 'Raw Content'
+};
+
 const renderJsonToHtml = (data) => {
     // Top-level array: make each item its own collapsible details block (main title only)
     if (Array.isArray(data)) {
@@ -53,7 +62,7 @@ const renderJsonToHtml = (data) => {
                 const isRaw = specialKeys.includes(key);
                 return (
                     <div key={key} className="content-section" style={{ marginBottom: 12 }}>
-                        <h2 className={`${key} result-header`}>{key}</h2>
+                        <h2 className="result-header" data-key={key}>{headerLabels[key] || key}</h2>
                         <div className="result-content">
                             {isRaw
                                 ? <pre style={{ whiteSpace: 'pre-wrap' }}>{String(value)}</pre>

@@ -53,43 +53,6 @@ body {
     white-space: pre-line;
 }
 
-/* Rename our headers */
-.result-header.dmpName::before {
-    content: "Dump Name";
-    visibility: visible;
-}
-.result-header.dmpName {
-    visibility: hidden;
-}
-.result-header.dmpInfo::before {
-    content: "Dump Info";
-    visibility: visible;
-}
-.result-header.dmpInfo {
-    visibility: hidden;
-}
-.result-header.analysis::before {
-    content: "Analysis";
-    visibility: visible;
-}
-.result-header.analysis {
-    visibility: hidden;
-}
-.result-header.post::before {
-    content: "Post Processing";
-    visibility: visible;
-}
-.result-header.post {
-    visibility: hidden;
-}
-.result-header.rawContent::before {
-    content: "Raw Content";
-    visibility: visible;
-}
-.result-header.rawContent {
-    visibility: hidden;
-}
-
 /* used for upload items */
 .button-container {
     padding-bottom: 1em;
