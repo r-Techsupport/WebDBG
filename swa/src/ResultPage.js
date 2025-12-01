@@ -34,8 +34,17 @@ const headerLabels = {
 };
 
 const renderJsonToHtml = (data) => {
-    // Top-level array: make each item its own collapsible details block (main title only)
+    // Top-level array: if more than one item, make each collapsible; if one, render directly
     if (Array.isArray(data)) {
+        if (data.length === 1) {
+            // Render the single item directly, no <details>
+            return (
+                <div className="content">
+                    {renderJsonToHtml(data[0], false)}
+                </div>
+            );
+        }
+        // Multiple items: collapsible details for each
         return data.map((item, idx) => {
             const key = (item && typeof item === 'object' && (item.key || item.dmpName)) ? (item.key || item.dmpName) : `item-${idx}`;
             const title = (item && item.bugcheckHuman && item.dmpName) ? item.bugcheckHuman + " (" + item.dmpName + ")" : `Item #${idx + 1}`;
@@ -43,7 +52,7 @@ const renderJsonToHtml = (data) => {
                 <details key={key} className="content result-collapsible">
                     <summary className="content-title">{title}</summary>
                     <div className="content-body">
-                        {renderJsonToHtml(item)}
+                        {renderJsonToHtml(item, false)}
                     </div>
                 </details>
             );
