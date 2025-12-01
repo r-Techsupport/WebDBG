@@ -73,6 +73,8 @@ You want to declare a volume for `C:\app\results`, an example command for deploy
 docker run -d --restart unless-stopped --name webdbg-api -v webdbg-results:C:\app\results -e FILE_SIZE_MB=10 -e RATE_LIMIT_S=60 -e RATE_LIMIT_MAX=5 -p 3000:3000 ghcr.io/r-techsupport/webdbg-api:latest
 ```
 
+You will want to increase the `proxy_read_timeout` if using nginx or the equivilant for your soltuion. Set it to at least 120s if not 300s.
+
 ### PUT endpoint usage
 With a file
 ```bash
