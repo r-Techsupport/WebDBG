@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import ResultPage from './ResultPage';
 import { Helmet } from 'react-helmet';
@@ -105,18 +105,6 @@ const FileUpload = () => {
         } finally {
             setLoading(false);
         }
-    };
-    
-    // Removed unused isValidJson
-    
-    // Function to sort JSON keys
-    const sortJson = (data, order) => {
-        return order.reduce((acc, key) => {
-            if (data.hasOwnProperty(key)) {
-                acc[key] = data[key];
-            }
-            return acc;
-        }, {});
     };
     
     return (
