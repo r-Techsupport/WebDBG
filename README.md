@@ -40,29 +40,40 @@ The following Secrets and Variables must be configured under the "Actions" conte
 - REACT_APP_SITE_NAME
 
 ## API
+### Variables
+
+|   Variable   |     Value    |
+| ------------ | ------------ |
+| ENABLE_CORS  | Default is false, set to true when testing otherwise you will get CORS failures. In prod this should be handled by your proxy |
+| RATE_LIMIT_S | The duration of your rate limit expressed in seconds |
+RATE_LIMIT_MAX | How many requests a client can make in RATE_LIMIT_S before being blocked |
+| FILE_SIZE_MB | How large of a file can be processed. This same size should be configured on your proxy for a more reliable failure. |
+
 ### Local development
 On a Windows host with Docker installed and using Windows containers execute the following from inside the `api` directory to build and launch the [WinDebug-Container](https://github.com/PipeItToDevNull/WinDebug-Container) based API.
 
 ```bash
-docker build -t api . ; docker run --rm -it -e ENABLE_CORS=true -p 3000:3000 api
+docker build -t api . ; docker run --rm -it -e ENABLE_CORS=true -e FILE_SIZE_MB=15 -e RATE_LIMIT_S=60 -e RATE_LIMIT_MAX=10 -p 3001:3000 api
 ```
 
 You may need process isolation if you get the error `hcs::CreateComputeSystem \\: The request is not supported.`
 
 ```bash
-docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -e ENABLE_CORS=true -p 3000:3000 api
+docker build --isolation=process -t api . ; docker run --isolation=process --rm -it -e ENABLE_CORS=true -p 3001:3000 api
 ```
 
-Once launched use `REACT_APP_API_URL=http://localhost:3000` in your `.env` and launch your local development SWA.
+Once launched use `REACT_APP_API_URL=http://localhost:3001` in your `.env` and launch your local development SWA.
 
 ### Deployment
-Using an nginx reverse proxy to apply CORS (don't run ENABLE_CORS=true in prod) and SSL is the best method, the nginx default max client upload size of 10MB is fine for this appliction.
+Using an nginx reverse proxy to apply CORS and SSL is the best method, the nginx default max client upload size of 10MB is fine for this appliction.
 
 You want to declare a volume for `C:\app\results`, an example command for deployment is below.
 
 ```bash
-docker run -d --restart unless-stopped --name webdbg-api -v webdbg-results:C:\app\results -p 3000:3000 ghcr.io/r-techsupport/webdbg-api:latest
+docker run -d --restart unless-stopped --name webdbg-api -v webdbg-results:C:\app\results -e FILE_SIZE_MB=10 -e RATE_LIMIT_S=60 -e RATE_LIMIT_MAX=5 -p 3000:3000 ghcr.io/r-techsupport/webdbg-api:latest
 ```
+
+You will want to increase the `proxy_read_timeout` if using nginx or the equivilant for your soltuion. Set it to at least 120s if not 300s.
 
 ### PUT endpoint usage
 With a file
@@ -70,7 +81,7 @@ With a file
 curl.exe -X PUT http://localhost:3000/analyze-dmp -F "dmpFile=@path/to/test.dmp"
 ```
 
-With a URL
+With a URL, if you have special characters in your URL like `&` you will need to encode it before submitting.
 ```bash
 curl -X PUT http://localhost:3000/analyze-dmp -F "url=http://example.com/file.dmp"
 ```

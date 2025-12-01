@@ -34,6 +34,10 @@ body {
     margin-right: 10%;
 }
 
+.content-title {
+    font-size: 1.2em;
+}
+
 /* The central part of the page holding results */
 .content {
     background-color: var(--b3);
@@ -47,36 +51,6 @@ body {
 .result-content {
     margin-left: 2em;
     white-space: pre-line;
-}
-
-/* Rename our headers */
-.result-header.dmpName::before {
-    content: "Dump Name";
-    visibility: visible;
-}
-.result-header.dmpName {
-    visibility: hidden;
-}
-.result-header.dmpInfo::before {
-    content: "Dump Info";
-    visibility: visible;
-}
-.result-header.dmpInfo {
-    visibility: hidden;
-}
-.result-header.analysis::before {
-    content: "Analysis";
-    visibility: visible;
-}
-.result-header.analysis {
-    visibility: hidden;
-}
-.result-header.post::before {
-    content: "Post Processing";
-    visibility: visible;
-}
-.result-header.post {
-    visibility: hidden;
 }
 
 /* used for upload items */

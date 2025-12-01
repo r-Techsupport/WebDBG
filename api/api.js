@@ -48,6 +48,28 @@ if (!fs.existsSync(resultsDir)) {
     fs.mkdirSync(resultsDir);
 }
 
+// Read file size, rate limit window, and max hits from environment variables
+const FILE_SIZE_MB = Number.isNaN(parseInt(process.env.FILE_SIZE_MB, 10))
+    ? 10
+    : parseInt(process.env.FILE_SIZE_MB, 10); // Default is 10 MB
+
+const RATE_LIMIT_S = Number.isNaN(parseInt(process.env.RATE_LIMIT_S, 10))
+    ? 180
+    : parseInt(process.env.RATE_LIMIT_S, 10); // Default 180 seconds (3 minutes)
+
+const RATE_LIMIT_MAX = Number.isNaN(parseInt(process.env.RATE_LIMIT_MAX, 10))
+    ? 10
+    : parseInt(process.env.RATE_LIMIT_MAX, 10); // Default 10 requests per window
+
+// Convert to bytes and milliseconds
+const FILE_SIZE_BYTES = FILE_SIZE_MB * 1024 * 1024;
+const RATE_LIMIT_MS = RATE_LIMIT_S * 1000;
+
+// Log the configured limits
+logger.info(`File size limit: ${FILE_SIZE_MB}MB (${FILE_SIZE_BYTES} bytes)`);
+logger.info(`Rate limit window: ${RATE_LIMIT_S} seconds (${RATE_LIMIT_MS} ms), max ${RATE_LIMIT_MAX} requests per window`);
+
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -72,10 +94,10 @@ if (process.env.ENABLE_CORS === 'true') {
     });
 }
 
-// Size limit of 10M
+// Size limit from environment variable (default 10MB)
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: FILE_SIZE_BYTES }
 });
 
 // Add security headers to all responses
@@ -83,8 +105,8 @@ app.use(helmet()); // Add security headers to all responses
 
 // Rate limiting middleware to prevent abuse
 const limiter = rateLimit({
-    windowMs: 3 * 60 * 1000, // 3 minutes
-    max: 10 // limit each IP to 10 requests per windowMs
+    windowMs: RATE_LIMIT_MS, // from environment variable
+    max: RATE_LIMIT_MAX // limit each IP to X requests per windowMs
 });
 app.use(limiter);
 
@@ -374,8 +396,8 @@ app.use(async (req, res, next) => {
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-            logger.warn('File size exceeds the limit of 10MB');
-            return res.status(400).send('File size exceeds the limit of 10MB');
+            logger.warn(`File size exceeds the limit of ${FILE_SIZE_MB}MB`);
+            return res.status(400).send(`File size exceeds the limit of ${FILE_SIZE_MB}MB`);
         }
     }
 

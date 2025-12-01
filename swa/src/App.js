@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import ResultPage from './ResultPage';
 import { Helmet } from 'react-helmet';
@@ -107,84 +107,6 @@ const FileUpload = () => {
         }
     };
     
-    // Removed unused isValidJson
-    
-    // Function to sort JSON keys
-    const sortJson = (data, order) => {
-        return order.reduce((acc, key) => {
-            if (data.hasOwnProperty(key)) {
-                acc[key] = data[key];
-            }
-            return acc;
-        }, {});
-    };
-    
-    // Function to render JSON object into HTML objects
-    const renderJsonToHtml = (data) => {
-        console.log("Data received:", data); // Debugging line
-
-        // No clue what this does, but everything is rendered inside it
-        if (Array.isArray(data)) {
-            return data.map((item) => {
-                // Use a stable key: stringified item or item.key if available
-                const key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
-                return (
-                    <div className="content" key={key}>
-                        {renderJsonToHtml(item)}
-                    </div>
-                );
-            });
-        }
-
-        // Define the key order to display in
-        const order = [
-            "dmpName",
-            "dmpInfo",
-            "analysis",
-            "post",
-            "rawContent",
-        ];
-        const specialKeys = ["rawContent"];
-        const sortedData = sortJson(data, order);
-        
-        // Convert object to array of key-value pairs
-        const keyValueArray = Object.entries(sortedData).map(([key, value]) => ({ key, value }));
-        
-        // Separate the special items
-        const specialItems = keyValueArray.filter(item => specialKeys.includes(item.key));
-        const regularItems = keyValueArray.filter(item => !specialKeys.includes(item.key));
-        
-        // Render the regular items
-        const regularRender = regularItems.map((item) => (
-            <React.Fragment key={item.key}>
-                <h2 className={`${item.key} result-header`}>
-                    {item.key}
-                </h2>
-                <div className="result-content">
-                    {item.value}
-                </div>
-            </React.Fragment>
-        ));
-        
-        // Render the special items with their own method
-        const specialRender = specialItems.map((item) => (
-            <div key={item.key || item.value || Math.random()} className={item.key}>
-                <details>
-                    <summary>Raw results</summary>
-                    <div className="result-content">{item.value}</div>
-                </details>
-            </div>
-        ));
-        
-        // Combine both renders
-        return (
-            <>
-            {regularRender}
-            {specialRender}
-            </>
-        );
-    };
-
     return (
         <div>
         <Helmet>
@@ -214,7 +136,7 @@ const FileUpload = () => {
                 {!error && !responseData && <div className="content"><p>{loading ? 'Processing...' : 'Upload your .dmp file or a .zip file containing multiple .dmp files directly or via a direct link.'}</p></div>}
                 {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
                 {responseData && (
-                    <>{renderJsonToHtml(JSON.parse(responseData))}</>
+                    <div className="content"><pre>{responseData}</pre></div>
                 )}
                 </div>
             <Footer />

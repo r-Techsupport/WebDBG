@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 
@@ -24,44 +24,86 @@ const sortJson = (data, order) => {
     }, {});
 };
 
+// Map JSON keys to user-friendly labels
+const headerLabels = {
+    dmpName: 'Dump Name',
+    dmpInfo: 'Dump Info',
+    analysis: 'Analysis',
+    post: 'Post Processing',
+    rawContent: 'Raw Content'
+};
+
 const renderJsonToHtml = (data) => {
+    // Top-level array: if more than one item, make each collapsible; if one, render directly
     if (Array.isArray(data)) {
-        return data.map((item) => {
-            // Use a stable key: item.key if available, otherwise stringified item
-            const key = (item && typeof item === 'object' && item.key) ? item.key : JSON.stringify(item);
+        if (data.length === 1) {
+            // Render the single item directly, no <details>
             return (
-                <div className="content" key={key}>
-                    {renderJsonToHtml(item)}
+                <div className="content">
+                    {renderJsonToHtml(data[0], false)}
                 </div>
+            );
+        }
+        // Multiple items: collapsible details for each
+        return data.map((item, idx) => {
+            const key = (item && typeof item === 'object' && (item.key || item.dmpName)) ? (item.key || item.dmpName) : `item-${idx}`;
+            const title = (item && item.bugcheckHuman && item.dmpName) ? item.bugcheckHuman + " (" + item.dmpName + ")" : `Item #${idx + 1}`;
+            return (
+                <details key={key} className="content result-collapsible">
+                    <summary className="content-title">{title}</summary>
+                    <div className="content-body">
+                        {renderJsonToHtml(item, false)}
+                    </div>
+                </details>
             );
         });
     }
-    const order = ["dmpName", "dmpInfo", "analysis", "post", "rawContent"];
+
+    // Object: render each key as a static section inside the main collapsible block.
+    const order = ["dmpInfo", "analysis", "post", "rawContent"];
     const specialKeys = ["rawContent"];
     const sortedData = sortJson(data, order);
-    const keyValueArray = Object.entries(sortedData).map(([key, value]) => ({ key, value }));
-    const specialItems = keyValueArray.filter(item => specialKeys.includes(item.key));
-    const regularItems = keyValueArray.filter(item => !specialKeys.includes(item.key));
-    const regularRender = regularItems.map((item) => (
-        <React.Fragment key={item.key}>
-            <h2 className={`${item.key} result-header`}>{item.key}</h2>
-            <div className="result-content">{item.value}</div>
-        </React.Fragment>
-    ));
-    const specialRender = specialItems.map((item) => (
-        <div key={item.key || item.value || Math.random()} className={item.key}>
-            <details>
-                <summary>Raw results</summary>
-                <div className="result-content">{item.value}</div>
-            </details>
-        </div>
-    ));
+    const keyValueArray = Object.entries(sortedData);
+
     return (
         <>
-            {regularRender}
-            {specialRender}
+            {keyValueArray.map(([key, value]) => {
+                const isRaw = specialKeys.includes(key);
+                return (
+                    <div key={key} className="content-section" style={{ marginBottom: 12 }}>
+                        <h2 className="result-header" data-key={key}>{headerLabels[key] || key}</h2>
+                        <div className="result-content">
+                            {isRaw
+                                ? <pre style={{ whiteSpace: 'pre-wrap' }}>{String(value)}</pre>
+                                : (value && typeof value === 'object')
+                                    ? renderJsonToHtml(value)
+                                    : <div className={`result-${key}`}>{String(value)}</div>
+                            }
+                        </div>
+                    </div>
+                );
+            })}
         </>
     );
+};
+
+// Collect human readable bugcheck names from the result object to display a summary
+const collectBugchecks = (node, collector = []) => {
+    if (Array.isArray(node)) {
+        node.forEach(item => collectBugchecks(item, collector));
+        return collector;
+    }
+    if (node && typeof node === 'object') {
+        if (Object.prototype.hasOwnProperty.call(node, 'bugcheckHuman')) {
+            const human = node.bugcheckHuman;
+            if (human != null) {
+                const s = String(human).trim();
+                if (s) collector.push(s);
+            }
+        }
+        Object.values(node).forEach(v => collectBugchecks(v, collector));
+    }
+    return collector;
 };
 
 const ResultPage = () => {
@@ -69,6 +111,32 @@ const ResultPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [responseData, setResponseData] = useState('');
+    const [copied, setCopied] = useState(false);
+
+    const handleShare = async () => {
+        const url = window.location.href;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(url);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2200);
+        } catch (err) {
+            console.error('Copy failed', err);
+            setError('Failed to copy URL to clipboard');
+            setTimeout(() => setError(''), 3000);
+        }
+    };
 
     useEffect(() => {
         const fetchResult = async () => {
@@ -102,11 +170,47 @@ const ResultPage = () => {
                         <a href={'/'} style={{ color: 'inherit', textDecoration: 'none' }}>{SITE_NAME}</a>
                     </h1>
                 </div>
+                <div className="button-container">
+                    <div className="button-div">
+                        <button onClick={handleShare} disabled={copied}>
+                            {copied ? 'URL copied to clipboard!' : 'Copy URL to clipboard'}
+                        </button>
+                    </div>
+                </div>
             {loading && <div className="content"><p>Loading...</p></div>}
             {error && <div className="content"><p style={{ color: '#bf616a' }}>{error}</p></div>}
             {responseData && (
                 isValidJson(responseData)
-                    ? <>{renderJsonToHtml(JSON.parse(responseData))}</>
+                    ? (() => {
+                        const parsed = JSON.parse(responseData);
+                        // If we have multiple results (array with length > 1), build a summary block
+                        if (Array.isArray(parsed) && parsed.length > 1) {
+                            const all = collectBugchecks(parsed);
+                            const counts = all.reduce((acc, name) => {
+                                acc[name] = (acc[name] || 0) + 1;
+                                return acc;
+                            }, {});
+                            return (
+                                <>
+                                    <div className="content summary">
+                                        <h2>Summary</h2>
+                                        {Object.keys(counts).length === 0 ? (
+                                            <p>No bugchecks found.</p>
+                                        ) : (
+                                            <ul>
+                                                {Object.entries(counts).map(([name, cnt]) => (
+                                                    <li key={name}>{name} x {cnt}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                        {renderJsonToHtml(parsed)}
+                                </>
+                            );
+                        }
+                        // single result or not an array -> normal render
+                        return <>{renderJsonToHtml(parsed)}</>;
+                    })()
                     : <div className="content"><p style={{ color: '#bf616a' }}>Error: Invalid JSON received from backend.</p></div>
             )}
             </div>
